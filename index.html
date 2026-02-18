@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FriendMarket — Prédictions entre amis</title>
+
+<!-- PWA + Push (requis pour iOS 16.4+) -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FriendMarket">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⚡ FriendMarket</div>
+    <div class="login-sub">Marchés prédictifs virtuels entre amis</div>
+    <select class="login-select" id="login-select">
+      <option value="">— Choisir un profil existant —</option>
+    </select>
+    <div style="color:var(--muted);font-size:0.75rem;margin-bottom:10px;">ou créer un nouveau compte</div>
+    <input type="text" class="login-input" id="login-name" placeholder="Entre ton prénom" maxlength="20">
+    <button class="btn-primary" onclick="loginUser()">Entrer dans l'arène ↗</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo" onclick="navigate('markets')">⚡ FriendMarket</div>
+      <nav>
+        <button class="nav-btn active" id="nav-markets" onclick="navigate('markets')">Marchés</button>
+        <button class="nav-btn" id="nav-leaderboard" onclick="navigate('leaderboard')">Classement</button>
+        <button class="nav-btn" id="nav-profile" onclick="navigate('profile')">Profil</button>
+        <button class="nav-btn" id="nav-create" onclick="navigate('create')">+ Créer</button>
+      </nav>
+      <div class="header-right">
+        <div class="wallet-badge" id="wallet-display">1000 🪙</div>
+        <div class="user-badge" id="user-display">?</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MARKETS -->
+  <div class="page active" id="page-markets">
+    <div class="hero">
+      <h1>Prédis l'avenir,<br><span>gagne des coins.</span></h1>
+      <p>Marchés prédictifs virtuels entre amis · LMSR · Aucun argent réel.</p>
+      <div class="stats-row" id="global-stats"></div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">🔥 Marchés actifs</span>
+      <button class="btn-sm btn-accent" onclick="navigate('create')">+ Créer un marché</button>
+    </div>
+    <div class="markets-grid" id="markets-grid"></div>
+    <div style="margin-top:32px;">
+      <div class="section-header"><span class="section-title">✅ Marchés résolus</span></div>
+      <div class="markets-grid" id="resolved-grid"></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="page" id="page-leaderboard">
+    <div class="section-header" style="margin-bottom:28px;">
+      <span class="section-title" style="font-size:1.4rem;">🏆 Classement général</span>
+    </div>
+    <div class="leaderboard" id="leaderboard-list"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="page" id="page-profile">
+    <div class="profile-header">
+      <div class="avatar-big" id="profile-avatar"></div>
+      <div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:12px;" id="profile-name"></div>
+        <div class="profile-stats" id="profile-stats"></div>
+      </div>
+    </div>
+    <div class="section-header"><span class="section-title">📋 Mes positions actives</span></div>
+    <div class="markets-grid" id="my-positions"></div>
+    <div style="margin-top:24px;">
+      <div class="section-header"><span class="section-title">📜 Historique des transactions</span></div>
+      <div id="my-history"></div>
+    </div>
+  </div>
+
+  <!-- CREATE -->
+  <div class="page" id="page-create">
+    <div class="create-form">
+      <div class="form-title">✨ Créer un marché prédictif</div>
+      <label>Question (réponse Oui/Non) — tape @ pour mentionner quelqu'un</label>
+      <div class="mention-wrap">
+        <div
+          id="question-editor"
+          contenteditable="true"
+          data-placeholder="Ex : Est-ce que @Lucas va finir son marathon en moins de 4h ?"
+          spellcheck="true"
+        ></div>
+        <div class="mention-dropdown" id="mention-dropdown"></div>
+      </div>
+
+      <div id="hide-banner" style="display:none" class="hide-banner">
+        <div class="hide-banner-title">👁️ Personnes mentionnées — masquer le marché ?</div>
+        <div id="hide-toggles"></div>
+      </div>
+
+      <label>Catégorie</label>
+      <select id="new-category">
+        <option>Sport</option><option>Jeux</option><option>Vie perso</option>
+        <option>Culture</option><option>Tech</option><option>Autre</option>
+      </select>
+      <label>Date de résolution</label>
+      <input type="date" id="new-date">
+      <label>Paramètre de liquidité b (20–200) — plus grand = prix plus stable</label>
+      <input type="number" id="new-b" value="50" min="20" max="200">
+      <label>Mise maximum par joueur (coins)</label>
+      <input type="number" id="new-max-bet" value="200" min="10" max="500">
+      <div class="info-box">
+        💡 <b>LMSR</b> : Le prix évolue automatiquement selon les mises. b=50 → perte max système ≈ 35 coins. b=100 → ≈ 70 coins. Plus b est élevé, plus les prix sont stables mais moins sensibles.
+      </div>
+      <button class="btn-primary" onclick="createMarket()">Créer le marché 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARKET MODAL -->
+<div class="modal-overlay" id="market-modal">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- Scripts — ordre important : dépendances d'abord -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/state.js"></script>
+<script src="js/lmsr.js"></script>
+<script src="js/db.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/push.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/markets.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/mention.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/create.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

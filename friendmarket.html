@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FriendMarket — Prédictions entre amis</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --yes: #10b981;
+    --no: #ef4444;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --gold: #f59e0b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  #login-screen {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px;
+    width: 380px;
+    text-align: center;
+    animation: slideUp 0.5s ease;
+  }
+
+  .login-logo {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  .login-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 32px; }
+
+  .login-select, .login-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .login-input:focus, .login-select:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #5b21b6);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  #app { display: none; min-height: 100vh; }
+
+  header {
+    position: sticky; top: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    z-index: 50;
+    padding: 0 24px;
+  }
+
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+  }
+
+  .logo {
+    font-size: 1.3rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  nav { display: flex; gap: 4px; }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-btn:hover, .nav-btn.active { color: var(--text); background: var(--surface2); }
+
+  .header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  .wallet-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .user-badge {
+    background: linear-gradient(135deg, var(--accent), #5b21b6);
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .page { display: none; max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  .page.active { display: block; }
+
+  .hero {
+    text-align: center;
+    padding: 40px 0 48px;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.8rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero p { color: var(--muted); font-size: 1rem; margin-bottom: 32px; }
+
+  .stats-row {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .stat-card .val {
+    font-size: 1.5rem; font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-card .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title { font-size: 1.1rem; font-weight: 700; }
+
+  .btn-sm {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-accent { background: linear-gradient(135deg, var(--accent), #5b21b6); border: none; color: white; }
+  .btn-accent:hover { opacity: 0.9; color: white; border-color: transparent; }
+
+  .markets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .market-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .market-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .market-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .market-card:hover::before { opacity: 1; }
+  .market-card.resolved { opacity: 0.75; }
+
+  .market-tags { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+
+  .tag {
+    font-size: 0.7rem; font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-open { background: rgba(124,58,237,0.2); color: var(--accent); }
+  .tag-resolved-yes { background: rgba(16,185,129,0.2); color: var(--yes); }
+  .tag-resolved-no { background: rgba(239,68,68,0.2); color: var(--no); }
+
+  .market-question {
+    font-size: 0.95rem; font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+
+  .prob-bar {
+    background: var(--surface2);
+    border-radius: 6px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .prob-fill { height: 100%; background: var(--yes); border-radius: 6px; transition: width 0.4s; }
+
+  .prob-labels {
+    display: flex; justify-content: space-between;
+    font-size: 0.8rem; font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  .yes-label { color: var(--yes); }
+  .no-label { color: var(--no); }
+
+  .market-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.75rem; color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  .volume-badge { font-family: 'JetBrains Mono', monospace; color: var(--gold); font-size: 0.75rem; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-header {
+    padding: 24px 24px 0;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px;
+  }
+
+  .modal-title { font-size: 1rem; font-weight: 800; line-height: 1.4; flex: 1; }
+
+  .modal-close {
+    background: var(--surface2);
+    border: none;
+    color: var(--muted);
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body { padding: 20px 24px 24px; }
+
+  .prob-display {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .prob-big {
+    font-size: 2rem; font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--yes);
+  }
+
+  .prob-big.low { color: var(--no); }
+
+  .trade-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+
+  .trade-tab {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .trade-tab.yes.active { border-color: var(--yes); color: var(--yes); background: rgba(16,185,129,0.1); }
+  .trade-tab.no.active { border-color: var(--no); color: var(--no); background: rgba(239,68,68,0.1); }
+
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+
+  input[type="number"], input[type="text"], input[type="date"], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+  }
+
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .cost-preview {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+  }
+
+  .cost-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .cost-row:last-child {
+    margin-bottom: 0; border-top: 1px solid var(--border);
+    padding-top: 8px; margin-top: 4px; font-weight: 700;
+  }
+  .cost-row .val { font-family: 'JetBrains Mono', monospace; }
+
+  .info-box {
+    background: rgba(6,182,212,0.07);
+    border: 1px solid rgba(6,182,212,0.2);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 0.8rem;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  .position-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .position-row:last-child { border-bottom: none; }
+
+  .yes-text { color: var(--yes); font-weight: 700; }
+  .no-text { color: var(--no); font-weight: 700; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .gold { color: var(--gold); }
+
+  .tx-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tx-row:last-child { border-bottom: none; }
+
+  .leaderboard { display: flex; flex-direction: column; gap: 10px; }
+
+  .lb-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .lb-row.me { border-color: var(--accent); }
+
+  .lb-rank {
+    font-size: 1.3rem; font-weight: 800;
+    width: 40px; text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+  }
+
+  .lb-rank.gold-r { color: var(--gold); }
+  .lb-rank.silver-r { color: #94a3b8; }
+  .lb-rank.bronze-r { color: #b45309; }
+
+  .lb-name { flex: 1; font-weight: 700; }
+  .lb-stats { display: flex; gap: 20px; text-align: right; }
+  .lb-stat .val { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 700; }
+  .lb-stat .lbl { font-size: 0.7rem; color: var(--muted); }
+
+  .create-form {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+  }
+
+  .form-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 24px; }
+
+  .profile-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    display: flex; gap: 24px; align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .avatar-big {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .profile-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+  .pstat { text-align: center; }
+  .pstat .val { font-size: 1.4rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+  .pstat .lbl { font-size: 0.75rem; color: var(--muted); }
+
+  .resolved-banner {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    text-align: center;
+    font-weight: 700;
+  }
+
+  .resolved-banner.yes { border: 1px solid var(--yes); color: var(--yes); background: rgba(16,185,129,0.07); }
+  .resolved-banner.no { border: 1px solid var(--no); color: var(--no); background: rgba(239,68,68,0.07); }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    z-index: 1000;
+    animation: slideUp 0.3s ease;
+    max-width: 320px;
+  }
+
+  .toast.success { border-color: var(--yes); color: var(--yes); }
+  .toast.error { border-color: var(--no); color: var(--no); }
+
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+  .empty-state .emoji { font-size: 3rem; margin-bottom: 16px; }
+
+  /* ── @MENTION EDITOR ── */
+  .mention-wrap {
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  #question-editor {
+    width: 100%;
+    min-height: 80px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+
+  #question-editor:focus { border-color: var(--accent); }
+  #question-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .mention-chip {
+    display: inline-block;
+    background: rgba(124,58,237,0.2);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-weight: 700;
+    font-size: 0.9em;
+    white-space: nowrap;
+  }
+
+  .mention-dropdown {
+    position: absolute;
+    left: 0; top: calc(100% + 6px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    z-index: 300;
+    min-width: 180px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    display: none;
+  }
+
+  .mention-dropdown.open { display: block; animation: slideUp 0.15s ease; }
+
+  .mention-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+
+  .mention-option:hover, .mention-option.selected {
+    background: var(--surface2);
+    color: var(--accent);
+  }
+
+  .mention-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* ── HIDE BANNER (auto-detected) ── */
+  .hide-banner {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .hide-banner-title {
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .hide-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(124,58,237,0.15);
+  }
+
+  .hide-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .toggle-switch {
+    position: relative;
+    width: 40px; height: 22px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--border);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+
+  .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    .lb-stats { flex-direction: column; gap: 4px; }
+    .header-inner { gap: 8px; }
+    .wallet-badge { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⚡ FriendMarket</div>
+    <div class="login-sub">Marchés prédictifs virtuels entre amis</div>
+    <select class="login-select" id="login-select">
+      <option value="">— Choisir un profil existant —</option>
+    </select>
+    <div style="color:var(--muted);font-size:0.75rem;margin-bottom:10px;">ou créer un nouveau compte</div>
+    <input type="text" class="login-input" id="login-name" placeholder="Entre ton prénom" maxlength="20">
+    <button class="btn-primary" onclick="loginUser()">Entrer dans l'arène ↗</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="logo" onclick="navigate('markets')">⚡ FriendMarket</div>
+      <nav>
+        <button class="nav-btn active" id="nav-markets" onclick="navigate('markets')">Marchés</button>
+        <button class="nav-btn" id="nav-leaderboard" onclick="navigate('leaderboard')">Classement</button>
+        <button class="nav-btn" id="nav-profile" onclick="navigate('profile')">Profil</button>
+        <button class="nav-btn" id="nav-create" onclick="navigate('create')">+ Créer</button>
+      </nav>
+      <div class="header-right">
+        <div class="wallet-badge" id="wallet-display">1000 🪙</div>
+        <div class="user-badge" id="user-display">?</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page active" id="page-markets">
+    <div class="hero">
+      <h1>Prédis l'avenir,<br><span>gagne des coins.</span></h1>
+      <p>Marchés prédictifs virtuels entre amis · LMSR · Aucun argent réel.</p>
+      <div class="stats-row" id="global-stats"></div>
+    </div>
+    <div class="section-header">
+      <span class="section-title">🔥 Marchés actifs</span>
+      <button class="btn-sm btn-accent" onclick="navigate('create')">+ Créer un marché</button>
+    </div>
+    <div class="markets-grid" id="markets-grid"></div>
+    <div style="margin-top:32px;">
+      <div class="section-header"><span class="section-title">✅ Marchés résolus</span></div>
+      <div class="markets-grid" id="resolved-grid"></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-leaderboard">
+    <div class="section-header" style="margin-bottom:28px;">
+      <span class="section-title" style="font-size:1.4rem;">🏆 Classement général</span>
+    </div>
+    <div class="leaderboard" id="leaderboard-list"></div>
+  </div>
+
+  <div class="page" id="page-profile">
+    <div class="profile-header">
+      <div class="avatar-big" id="profile-avatar"></div>
+      <div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:12px;" id="profile-name"></div>
+        <div class="profile-stats" id="profile-stats"></div>
+      </div>
+    </div>
+    <div class="section-header"><span class="section-title">📋 Mes positions actives</span></div>
+    <div class="markets-grid" id="my-positions"></div>
+    <div style="margin-top:24px;">
+      <div class="section-header"><span class="section-title">📜 Historique des transactions</span></div>
+      <div id="my-history"></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-create">
+    <div class="create-form">
+      <div class="form-title">✨ Créer un marché prédictif</div>
+      <label>Question (réponse Oui/Non) — tape @ pour mentionner quelqu'un</label>
+      <div class="mention-wrap">
+        <div
+          id="question-editor"
+          contenteditable="true"
+          data-placeholder="Ex : Est-ce que @Lucas va finir son marathon en moins de 4h ?"
+          spellcheck="true"
+        ></div>
+        <div class="mention-dropdown" id="mention-dropdown"></div>
+      </div>
+
+      <!-- Auto-detected hide panel -->
+      <div id="hide-banner" style="display:none" class="hide-banner">
+        <div class="hide-banner-title">👁️ Personnes mentionnées — masquer le marché ?</div>
+        <div id="hide-toggles"></div>
+      </div>
+
+      <label>Catégorie</label>
+      <select id="new-category">
+        <option>Sport</option><option>Jeux</option><option>Vie perso</option>
+        <option>Culture</option><option>Tech</option><option>Autre</option>
+      </select>
+      <label>Date de résolution</label>
+      <input type="date" id="new-date">
+      <label>Paramètre de liquidité b (20–200) — plus grand = prix plus stable</label>
+      <input type="number" id="new-b" value="50" min="20" max="200">
+      <label>Mise maximum par joueur (coins)</label>
+      <input type="number" id="new-max-bet" value="200" min="10" max="500">
+      <div class="info-box">
+        💡 <b>LMSR</b> : Le prix évolue automatiquement selon les mises. b=50 → perte max système ≈ 35 coins. b=100 → ≈ 70 coins. Plus b est élevé, plus les prix sont stables mais moins sensibles.
+      </div>
+      <button class="btn-primary" onclick="createMarket()">Créer le marché 🚀</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARKET MODAL -->
+<div class="modal-overlay" id="market-modal">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+// ⚙️  SUPABASE CONFIG — remplace par tes vraies valeurs
+// ============================================================
+const SUPABASE_URL = 'https://XXXXXXXXXXXXXXXX.supabase.co';
+const SUPABASE_ANON_KEY = 'eyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE (cache local — une seule source de vérité = Supabase)
+// ============================================================
+
+const INITIAL_COINS = 1000;
+const MAX_PRICE_MOVE = 0.30;
+
+// Cache in-memory pour éviter des re-fetch constants
+let state = { users: {}, markets: [], transactions: [] };
+let currentUser = null;
+let tradeState = { side: 'yes' };
+
+// ── Helpers DB ──────────────────────────────────────────────
+
+async function dbLoadAll() {
+  const [usersRes, marketsRes, txRes] = await Promise.all([
+    sb.from('users').select('*'),
+    sb.from('markets').select('*').order('created_at', { ascending: false }),
+    sb.from('transactions').select('*').order('timestamp', { ascending: true }),
+  ]);
+  if (usersRes.error) throw usersRes.error;
+  if (marketsRes.error) throw marketsRes.error;
+  if (txRes.error) throw txRes.error;
+
+  // Normalize to the shape the rest of the code expects
+  state.users = {};
+  usersRes.data.forEach(u => {
+    state.users[u.name] = { coins: u.coins, joinedAt: new Date(u.joined_at).getTime() };
+  });
+  state.markets = marketsRes.data.map(dbToMarket);
+  state.transactions = txRes.data.map(dbToTx);
+}
+
+function dbToMarket(r) {
+  return {
+    id: r.id,
+    question: r.question,
+    category: r.category,
+    resolveDate: r.resolve_date,
+    b: r.b,
+    maxBet: r.max_bet,
+    creator: r.creator,
+    hiddenFrom: r.hidden_from || [],
+    qYes: r.q_yes,
+    qNo: r.q_no,
+    resolved: r.resolved,
+    resolution: r.resolution,
+    createdAt: new Date(r.created_at).getTime(),
+    resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
+  };
+}
+
+function dbToTx(r) {
+  return {
+    id: r.id,
+    marketId: r.market_id,
+    user: r.user_name,
+    side: r.side,
+    coins: r.coins,
+    shares: r.shares,
+    probBefore: r.prob_before,
+    probAfter: r.prob_after,
+    timestamp: new Date(r.timestamp).getTime(),
+  };
+}
+
+async function dbUpsertUser(name, coins) {
+  const { error } = await sb.from('users').upsert(
+    { name, coins, joined_at: new Date().toISOString() },
+    { onConflict: 'name', ignoreDuplicates: false }
+  );
+  if (error) throw error;
+}
+
+async function dbUpdateCoins(name, coins) {
+  const { error } = await sb.from('users').update({ coins }).eq('name', name);
+  if (error) throw error;
+}
+
+async function dbInsertMarket(m) {
+  const { error } = await sb.from('markets').insert({
+    id: m.id,
+    question: m.question,
+    category: m.category,
+    resolve_date: m.resolveDate,
+    b: m.b,
+    max_bet: m.maxBet,
+    creator: m.creator,
+    hidden_from: m.hiddenFrom,
+    q_yes: m.qYes,
+    q_no: m.qNo,
+    resolved: false,
+    resolution: null,
+    created_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
+async function dbUpdateMarket(id, fields) {
+  // Map camelCase → snake_case for relevant fields
+  const mapped = {};
+  if (fields.qYes !== undefined)    mapped.q_yes       = fields.qYes;
+  if (fields.qNo !== undefined)     mapped.q_no        = fields.qNo;
+  if (fields.resolved !== undefined) mapped.resolved   = fields.resolved;
+  if (fields.resolution !== undefined) mapped.resolution = fields.resolution;
+  if (fields.resolvedAt !== undefined) mapped.resolved_at = new Date(fields.resolvedAt).toISOString();
+  if (fields.hiddenFrom !== undefined) mapped.hidden_from = fields.hiddenFrom;
+  const { error } = await sb.from('markets').update(mapped).eq('id', id);
+  if (error) throw error;
+}
+
+async function dbInsertTx(t) {
+  const { error } = await sb.from('transactions').insert({
+    id: t.id,
+    market_id: t.marketId,
+    user_name: t.user,
+    side: t.side,
+    coins: t.coins,
+    shares: t.shares,
+    prob_before: t.probBefore,
+    prob_after: t.probAfter,
+    timestamp: new Date(t.timestamp).toISOString(),
+  });
+  if (error) throw error;
+}
+
+// ── Realtime subscriptions ───────────────────────────────────
+
+function subscribeRealtime() {
+  sb.channel('public:markets')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'markets' }, () => {
+      dbLoadAll().then(() => { renderMarkets(); });
+    })
+    .subscribe();
+
+  sb.channel('public:transactions')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, () => {
+      dbLoadAll().then(() => { renderMarkets(); updateHeader(); });
+    })
+    .subscribe();
+
+  sb.channel('public:users')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, () => {
+      dbLoadAll().then(() => updateHeader());
+    })
+    .subscribe();
+}
+
+// ============================================================
+// LMSR MATH
+// ============================================================
+
+// Cost function: C(q_yes, q_no) = b * ln(exp(q_yes/b) + exp(q_no/b))
+// Uses log-sum-exp trick for numerical stability
+function lmsrC(qY, qN, b) {
+  const x = qY / b, y = qN / b;
+  const m = Math.max(x, y);
+  return b * (m + Math.log(Math.exp(x - m) + Math.exp(y - m)));
+}
+
+// Implicit probability of YES
+function lmsrProb(qY, qN, b) {
+  const d = (qY - qN) / b;
+  if (d > 50) return 0.9999;
+  if (d < -50) return 0.0001;
+  return 1 / (1 + Math.exp(-d));
+}
+
+// Cost to buy `shares` on a given side
+function costToBuy(mkt, side, shares) {
+  const newQY = mkt.qYes + (side === 'yes' ? shares : 0);
+  const newQN = mkt.qNo  + (side === 'no'  ? shares : 0);
+  return lmsrC(newQY, newQN, mkt.b) - lmsrC(mkt.qYes, mkt.qNo, mkt.b);
+}
+
+// Binary search: how many shares for `coins`?
+function sharesToReceive(mkt, side, coins) {
+  if (coins <= 0) return 0;
+  let lo = 0, hi = coins * 20;
+  for (let i = 0; i < 64; i++) {
+    const mid = (lo + hi) / 2;
+    (costToBuy(mkt, side, mid) < coins) ? (lo = mid) : (hi = mid);
+  }
+  return (lo + hi) / 2;
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+function initLogin() {
+  const sel = document.getElementById('login-select');
+  sel.innerHTML = '<option value="">— Choisir un profil existant —</option>';
+  Object.entries(state.users)
+    .sort((a, b) => b[1].coins - a[1].coins)
+    .forEach(([name, u]) => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = `${name} — ${Math.round(u.coins)} 🪙`;
+      sel.appendChild(opt);
+    });
+}
+
+async function loginUser() {
+  const sel = document.getElementById('login-select').value;
+  const raw = document.getElementById('login-name').value.trim();
+  const name = sel || raw;
+  if (!name) return showToast('Choisis ou entre un prénom !', 'error');
+
+  try {
+    if (!state.users[name]) {
+      // New user — insert in DB
+      await dbUpsertUser(name, INITIAL_COINS);
+      // Reload state to get fresh data
+      await dbLoadAll();
+      showToast(`Bienvenue ${name} ! Tu débutes avec 1000 🪙`, 'success');
+    }
+
+    currentUser = name;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+    subscribeRealtime();
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur de connexion à la base de données.', 'error');
+  }
+}
+
+// ============================================================
+// APP INIT
+// ============================================================
+
+function initApp() {
+  updateHeader();
+  populateHideFrom();
+  const dateInput = document.getElementById('new-date');
+  const future = new Date(Date.now() + 7*86400000);
+  dateInput.min = new Date().toISOString().split('T')[0];
+  dateInput.value = future.toISOString().split('T')[0];
+  renderMarkets();
+}
+
+function populateHideFrom() {
+  // No longer needed — handled by @mention engine
+  initMentionEditor();
+}
+
+function updateHeader() {
+  const coins = state.users[currentUser]?.coins ?? 0;
+  document.getElementById('wallet-display').textContent = `${Math.round(coins)} 🪙`;
+  document.getElementById('user-display').textContent = currentUser;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  const map = { markets: 'page-markets', leaderboard: 'page-leaderboard', profile: 'page-profile', create: 'page-create' };
+  const navMap = { markets: 'nav-markets', leaderboard: 'nav-leaderboard', profile: 'nav-profile', create: 'nav-create' };
+
+  document.getElementById(map[page])?.classList.add('active');
+  if (navMap[page]) document.getElementById(navMap[page])?.classList.add('active');
+
+  if (page === 'leaderboard') renderLeaderboard();
+  if (page === 'profile') renderProfile();
+  if (page === 'markets') renderMarkets();
+  if (page === 'create') initMentionEditor();
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// RENDER MARKETS
+// ============================================================
+
+function visibleMarkets() {
+  return state.markets.filter(m => {
+    if (m.resolved) return true;
+    return !(m.hiddenFrom && m.hiddenFrom.includes(currentUser));
+  });
+}
+
+function renderMarkets() {
+  const all = visibleMarkets();
+  const open = all.filter(m => !m.resolved);
+  const resolved = all.filter(m => m.resolved);
+  const totalVol = state.transactions.reduce((a, t) => a + t.coins, 0);
+
+  document.getElementById('global-stats').innerHTML = `
+    <div class="stat-card"><div class="val">${open.length}</div><div class="lbl">Marchés actifs</div></div>
+    <div class="stat-card"><div class="val">${Object.keys(state.users).length}</div><div class="lbl">Joueurs</div></div>
+    <div class="stat-card"><div class="val">${Math.round(totalVol)}</div><div class="lbl">Volume total 🪙</div></div>
+    <div class="stat-card"><div class="val">${resolved.length}</div><div class="lbl">Résolus</div></div>
+  `;
+
+  document.getElementById('markets-grid').innerHTML = open.length
+    ? open.map(renderMarketCard).join('')
+    : '<div class="empty-state"><div class="emoji">🌱</div><div>Aucun marché actif.<br>Crée le premier !</div></div>';
+
+  document.getElementById('resolved-grid').innerHTML = resolved.map(renderMarketCard).join('');
+}
+
+function renderQuestion(q) {
+  // Wrap @Name mentions in a styled span
+  return q.replace(/@(\w+)/g, (_, name) =>
+    `<span style="background:rgba(124,58,237,0.2);color:var(--accent);border-radius:5px;padding:1px 5px;font-weight:700;">@${name}</span>`
+  );
+}
+
+function renderMarketCard(m) {
+  const prob = lmsrProb(m.qYes, m.qNo, m.b);
+  const pct = Math.round(prob * 100);
+  const vol = state.transactions.filter(t => t.marketId === m.id).reduce((a, t) => a + t.coins, 0);
+
+  let tagHtml = '';
+  if (m.resolved) {
+    tagHtml = m.resolution === 'yes'
+      ? '<span class="tag tag-resolved-yes">✓ OUI</span>'
+      : '<span class="tag tag-resolved-no">✗ NON</span>';
+  } else {
+    tagHtml = '<span class="tag tag-open">OUVERT</span>';
+  }
+
+  const daysLeft = m.resolveDate
+    ? Math.ceil((new Date(m.resolveDate) - Date.now()) / 86400000)
+    : null;
+
+  const dateStr = daysLeft !== null
+    ? (m.resolved
+        ? new Date(m.resolveDate).toLocaleDateString('fr')
+        : daysLeft > 0 ? `dans ${daysLeft}j` : 'aujourd\'hui')
+    : '—';
+
+  // My position indicator
+  const myTx = state.transactions.filter(t => t.marketId === m.id && t.user === currentUser);
+  const posIndicator = myTx.length > 0 ? ' <span style="color:var(--accent)">●</span>' : '';
+
+  return `<div class="market-card ${m.resolved ? 'resolved' : ''}" onclick="openMarket('${m.id}')">
+    <div class="market-tags">
+      ${tagHtml}
+      <span class="tag" style="background:rgba(107,107,138,0.12);color:var(--muted)">${m.category}</span>
+    </div>
+    <div class="market-question">${renderQuestion(m.question)}${posIndicator}</div>
+    <div class="prob-bar"><div class="prob-fill" style="width:${pct}%"></div></div>
+    <div class="prob-labels">
+      <span class="yes-label">OUI ${pct}%</span>
+      <span class="no-label">NON ${100-pct}%</span>
+    </div>
+    <div class="market-footer">
+      <span>⏰ ${dateStr}</span>
+      <span>par <b>${m.creator}</b></span>
+      <span class="volume-badge">${Math.round(vol)} 🪙</span>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// @MENTION EDITOR
+// ============================================================
+
+let mentionState = {
+  active: false,
+  query: '',
+  startOffset: 0,
+  anchorNode: null,
+  selectedIdx: 0
+};
+
+// Tracks which mentioned users have hide=true
+let mentionHideMap = {}; // { userName: bool }
+
+function initMentionEditor() {
+  const editor = document.getElementById('question-editor');
+  const dropdown = document.getElementById('mention-dropdown');
+  if (!editor) return;
+
+  // Clear on re-init
+  editor.innerHTML = '';
+  mentionHideMap = {};
+  updateHideBanner();
+
+  editor.addEventListener('input', onEditorInput);
+  editor.addEventListener('keydown', onEditorKeydown);
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.mention-wrap')) closeMentionDropdown();
+  });
+}
+
+function onEditorInput() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+  const offset = range.startOffset;
+
+  if (node.nodeType !== Node.TEXT_NODE) { closeMentionDropdown(); return; }
+
+  // Find last @ before cursor in this text node
+  const textBefore = node.textContent.slice(0, offset);
+  const atIdx = textBefore.lastIndexOf('@');
+
+  if (atIdx === -1) { closeMentionDropdown(); return; }
+
+  // Make sure there's no space between @ and cursor
+  const query = textBefore.slice(atIdx + 1);
+  if (/\s/.test(query)) { closeMentionDropdown(); return; }
+
+  mentionState = { active: true, query, startOffset: atIdx, anchorNode: node, selectedIdx: 0 };
+  showMentionDropdown(query);
+  updateHideBanner();
+}
+
+function onEditorKeydown(e) {
+  const dropdown = document.getElementById('mention-dropdown');
+  if (!mentionState.active || !dropdown.classList.contains('open')) return;
+
+  const options = dropdown.querySelectorAll('.mention-option');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    mentionState.selectedIdx = Math.min(mentionState.selectedIdx + 1, options.length - 1);
+    renderDropdownSelection();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    mentionState.selectedIdx = Math.max(mentionState.selectedIdx - 1, 0);
+    renderDropdownSelection();
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    const sel = options[mentionState.selectedIdx];
+    if (sel) { e.preventDefault(); commitMention(sel.dataset.name); }
+  } else if (e.key === 'Escape') {
+    closeMentionDropdown();
+  }
+}
+
+function getMentionCandidates(query) {
+  const q = query.toLowerCase();
+  return Object.keys(state.users)
+    .filter(n => n !== currentUser && n.toLowerCase().startsWith(q));
+}
+
+function showMentionDropdown(query) {
+  const dropdown = document.getElementById('mention-dropdown');
+  const candidates = getMentionCandidates(query);
+
+  if (!candidates.length) { closeMentionDropdown(); return; }
+
+  mentionState.selectedIdx = 0;
+  dropdown.innerHTML = candidates.map((name, i) =>
+    `<div class="mention-option${i === 0 ? ' selected' : ''}" data-name="${name}" onclick="commitMention('${name}')">
+      <div class="mention-avatar">${name[0].toUpperCase()}</div>
+      <span>${name}</span>
+    </div>`
+  ).join('');
+  dropdown.classList.add('open');
+}
+
+function renderDropdownSelection() {
+  const dropdown = document.getElementById('mention-dropdown');
+  dropdown.querySelectorAll('.mention-option').forEach((el, i) => {
+    el.classList.toggle('selected', i === mentionState.selectedIdx);
+  });
+}
+
+function closeMentionDropdown() {
+  document.getElementById('mention-dropdown')?.classList.remove('open');
+  mentionState.active = false;
+}
+
+function commitMention(name) {
+  const { anchorNode, startOffset } = mentionState;
+  if (!anchorNode) return;
+
+  const sel = window.getSelection();
+  const range = sel.getRangeAt(0);
+
+  // Delete the @query text
+  const deleteRange = document.createRange();
+  deleteRange.setStart(anchorNode, startOffset);
+  deleteRange.setEnd(anchorNode, range.startOffset);
+  deleteRange.deleteContents();
+
+  // Insert mention chip
+  const chip = document.createElement('span');
+  chip.className = 'mention-chip';
+  chip.contentEditable = 'false';
+  chip.dataset.mention = name;
+  chip.textContent = `@${name}`;
+
+  // Insert chip then a space text node
+  const space = document.createTextNode('\u00A0');
+  const insertRange = document.createRange();
+  insertRange.setStart(anchorNode, startOffset);
+  insertRange.collapse(true);
+  insertRange.insertNode(space);
+  insertRange.insertNode(chip);
+
+  // Move cursor after space
+  const newRange = document.createRange();
+  newRange.setStartAfter(space);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+
+  closeMentionDropdown();
+
+  // Auto-add to hide map if not already tracked
+  if (!(name in mentionHideMap)) mentionHideMap[name] = true;
+  updateHideBanner();
+}
+
+function updateHideBanner() {
+  // Collect currently mentioned names from DOM
+  const editor = document.getElementById('question-editor');
+  if (!editor) return;
+  const chips = editor.querySelectorAll('.mention-chip[data-mention]');
+  const mentioned = [...new Set([...chips].map(c => c.dataset.mention))];
+
+  // Clean up hideMap for removed mentions
+  Object.keys(mentionHideMap).forEach(n => {
+    if (!mentioned.includes(n)) delete mentionHideMap[n];
+  });
+
+  const banner = document.getElementById('hide-banner');
+  const togglesEl = document.getElementById('hide-toggles');
+  if (!banner || !togglesEl) return;
+
+  if (mentioned.length === 0) {
+    banner.style.display = 'none';
+    return;
+  }
+
+  banner.style.display = 'block';
+  togglesEl.innerHTML = mentioned.map(name => `
+    <div class="hide-toggle-row">
+      <span>🙈 Masquer ce marché à <b>${name}</b> jusqu'à la résolution</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="hide-toggle-${name}" ${mentionHideMap[name] ? 'checked' : ''}
+          onchange="mentionHideMap['${name}'] = this.checked">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  `).join('');
+}
+
+function getEditorText() {
+  const editor = document.getElementById('question-editor');
+  if (!editor) return '';
+  // Walk nodes: text nodes as-is, mention chips as @Name
+  let text = '';
+  editor.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.classList.contains('mention-chip')) {
+        text += `@${node.dataset.mention}`;
+      } else {
+        text += node.innerText || node.textContent;
+      }
+    }
+  });
+  return text.replace(/\u00A0/g, ' ').trim();
+}
+
+function getHiddenFrom() {
+  return Object.entries(mentionHideMap)
+    .filter(([, hide]) => hide)
+    .map(([name]) => name);
+}
+
+// ============================================================
+// CREATE MARKET
+// ============================================================
+
+async function createMarket() {
+  const question = getEditorText();
+  const category = document.getElementById('new-category').value;
+  const resolveDate = document.getElementById('new-date').value;
+  const b = parseFloat(document.getElementById('new-b').value);
+  const maxBet = parseFloat(document.getElementById('new-max-bet').value);
+  const hiddenFrom = getHiddenFrom();
+
+  if (!question) return showToast('Entre une question !', 'error');
+  if (!resolveDate) return showToast('Choisis une date de résolution.', 'error');
+  if (isNaN(b) || b < 20 || b > 200) return showToast('b doit être entre 20 et 200.', 'error');
+  if (isNaN(maxBet) || maxBet < 10) return showToast('Mise max invalide.', 'error');
+
+  const market = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    question, category, resolveDate, b, maxBet,
+    creator: currentUser,
+    hiddenFrom,
+    qYes: 0, qNo: 0,
+    resolved: false, resolution: null,
+    createdAt: Date.now()
+  };
+
+  try {
+    await dbInsertMarket(market);
+    await dbLoadAll();
+    document.getElementById('question-editor').innerHTML = '';
+    mentionHideMap = {};
+    updateHideBanner();
+    showToast('Marché créé ! 🎉', 'success');
+    navigate('markets');
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur lors de la création du marché.', 'error');
+  }
+}
+
+// ============================================================
+// MARKET MODAL
+// ============================================================
+
+function openMarket(id) {
+  const m = state.markets.find(x => x.id === id);
+  if (!m) return;
+  tradeState = { side: 'yes' };
+  renderModal(m);
+  document.getElementById('market-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('market-modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('market-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('market-modal')) closeModal();
+});
+
+function renderModal(m) {
+  const prob = lmsrProb(m.qYes, m.qNo, m.b);
+  const pct = Math.round(prob * 100);
+  const myTx = state.transactions.filter(t => t.marketId === m.id && t.user === currentUser);
+  const myYes = myTx.filter(t => t.side === 'yes').reduce((a, t) => a + t.shares, 0);
+  const myNo  = myTx.filter(t => t.side === 'no').reduce((a, t) => a + t.shares, 0);
+  const mySpent = myTx.reduce((a, t) => a + t.coins, 0);
+  const mySpentOnMarket = myTx.reduce((a, t) => a + t.coins, 0);
+  const remaining = Math.max(0, m.maxBet - mySpentOnMarket);
+  const allTx = [...state.transactions.filter(t => t.marketId === m.id)].sort((a,b) => b.timestamp - a.timestamp).slice(0, 8);
+
+  // Resolved banner
+  let resolvedBanner = '';
+  if (m.resolved) {
+    const won = m.resolution === 'yes' ? myYes : myNo;
+    resolvedBanner = `<div class="resolved-banner ${m.resolution}">
+      Résolu : ${m.resolution === 'yes' ? '✅ OUI' : '❌ NON'}
+      ${won > 0 ? `— Tu as gagné <b>${won.toFixed(2)} 🪙</b>` : mySpent > 0 ? `— Tu as perdu <b>${mySpent.toFixed(0)} 🪙</b>` : ''}
+    </div>`;
+  }
+
+  // Trade section
+  const maxAllowed = Math.min(remaining, state.users[currentUser]?.coins ?? 0);
+  let tradeSection = '';
+  if (!m.resolved) {
+    if (maxAllowed < 1) {
+      tradeSection = `<div class="info-box">⚠️ Tu as atteint ta limite de mise sur ce marché (${m.maxBet} 🪙 max). Attends la résolution !</div>`;
+    } else {
+      tradeSection = `
+      <div class="trade-tabs">
+        <button class="trade-tab yes active" id="tab-yes" onclick="setTradeSide('yes','${m.id}')">🟢 OUI</button>
+        <button class="trade-tab no" id="tab-no" onclick="setTradeSide('no','${m.id}')">🔴 NON</button>
+      </div>
+      <label>Mise en coins (max ${Math.floor(maxAllowed)} 🪙 — limite marché: ${m.maxBet})</label>
+      <input type="number" id="trade-amount" value="10" min="1" max="${Math.floor(maxAllowed)}" step="1" oninput="updateCostPreview('${m.id}')">
+      <div class="cost-preview" id="cost-preview">
+        <div class="cost-row"><span>Parts reçues</span><span class="val" id="prev-shares">—</span></div>
+        <div class="cost-row"><span>Prix moyen/part</span><span class="val" id="prev-avg">—</span></div>
+        <div class="cost-row"><span>Gain si gagnant</span><span class="val" id="prev-gain">—</span></div>
+        <div class="cost-row"><span>Coût total</span><span class="val" id="prev-cost">—</span></div>
+      </div>
+      <button class="btn-primary" onclick="executeTrade('${m.id}')">Confirmer la mise ↗</button>
+      `;
+    }
+  }
+
+  // Positions
+  let posSection = '';
+  if (myYes > 0 || myNo > 0) {
+    posSection = `<div class="divider"></div>
+    <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;">MES POSITIONS</div>
+    ${myYes > 0 ? `<div class="position-row"><span class="yes-text">OUI</span><span class="mono">${myYes.toFixed(3)} parts</span><span class="mono" style="color:var(--yes)">${myYes.toFixed(2)} 🪙 si OUI</span></div>` : ''}
+    ${myNo  > 0 ? `<div class="position-row"><span class="no-text">NON</span><span class="mono">${myNo.toFixed(3)} parts</span><span class="mono" style="color:var(--no)">${myNo.toFixed(2)} 🪙 si NON</span></div>` : ''}
+    <div class="position-row"><span style="color:var(--muted)">Total investi</span><span class="mono gold">${mySpent.toFixed(1)} 🪙</span></div>`;
+  }
+
+  // History
+  let histSection = '';
+  if (allTx.length) {
+    histSection = `<div class="divider"></div>
+    <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;">DERNIÈRES TRANSACTIONS</div>
+    ${allTx.map(t => `<div class="tx-row">
+      <span><b>${t.user}</b></span>
+      <span class="${t.side === 'yes' ? 'yes-text' : 'no-text'}">${t.side.toUpperCase()}</span>
+      <span class="mono">${t.coins.toFixed(0)} 🪙 → ${t.shares.toFixed(2)} parts</span>
+      <span>${new Date(t.timestamp).toLocaleDateString('fr')}</span>
+    </div>`).join('')}`;
+  }
+
+  // Resolve (creator only)
+  let resolveSection = '';
+  if (!m.resolved && m.creator === currentUser) {
+    resolveSection = `<div class="divider"></div>
+    <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;">RÉSOUDRE CE MARCHÉ (créateur uniquement)</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-sm" style="flex:1;background:rgba(16,185,129,0.12);border-color:var(--yes);color:var(--yes);" onclick="resolveMarket('${m.id}','yes')">✅ Résoudre OUI</button>
+      <button class="btn-sm" style="flex:1;background:rgba(239,68,68,0.12);border-color:var(--no);color:var(--no);" onclick="resolveMarket('${m.id}','no')">❌ Résoudre NON</button>
+    </div>`;
+  }
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-header">
+      <div class="modal-title">${renderQuestion(m.question)}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${resolvedBanner}
+      <div class="prob-display">
+        <div class="prob-bar" style="margin-bottom:10px;"><div class="prob-fill" style="width:${pct}%"></div></div>
+        <div class="prob-big ${prob < 0.5 ? 'low' : ''}">${pct}%</div>
+        <div style="color:var(--muted);font-size:0.8rem;margin-top:4px;">probabilité OUI — b=${m.b} — max ${m.maxBet} 🪙/joueur</div>
+      </div>
+      <div class="info-box">📅 Résolution : ${new Date(m.resolveDate).toLocaleDateString('fr', {day:'numeric',month:'long',year:'numeric'})} · Créé par <b>${m.creator}</b></div>
+      ${tradeSection}
+      ${posSection}
+      ${histSection}
+      ${resolveSection}
+    </div>`;
+
+  setTimeout(() => updateCostPreview(m.id), 30);
+}
+
+function setTradeSide(side, marketId) {
+  tradeState.side = side;
+  document.getElementById('tab-yes').className = `trade-tab yes${side === 'yes' ? ' active' : ''}`;
+  document.getElementById('tab-no').className  = `trade-tab no${side === 'no'  ? ' active' : ''}`;
+  updateCostPreview(marketId);
+}
+
+function updateCostPreview(marketId) {
+  const m = state.markets.find(x => x.id === marketId);
+  const amtEl = document.getElementById('trade-amount');
+  if (!m || !amtEl) return;
+  const coins = parseFloat(amtEl.value) || 0;
+  const shares = sharesToReceive(m, tradeState.side, coins);
+  const avgPrice = shares > 0 ? coins / shares : 0;
+  const gain = shares - coins;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('prev-shares', `${shares.toFixed(3)} parts`);
+  set('prev-avg', `${(avgPrice * 100).toFixed(1)}¢`);
+  set('prev-gain', `${gain >= 0 ? '+' : ''}${gain.toFixed(2)} 🪙`);
+  set('prev-cost', `${coins.toFixed(1)} 🪙`);
+}
+
+// ============================================================
+// EXECUTE TRADE
+// ============================================================
+
+async function executeTrade(marketId) {
+  const m = state.markets.find(x => x.id === marketId);
+  if (!m || m.resolved) return showToast('Marché fermé.', 'error');
+
+  const coins = parseFloat(document.getElementById('trade-amount')?.value) || 0;
+  if (coins < 1) return showToast('Mise minimum : 1 coin.', 'error');
+
+  const user = state.users[currentUser];
+  if (coins > user.coins) return showToast('Pas assez de coins !', 'error');
+
+  // Per-market limit
+  const mySpent = state.transactions
+    .filter(t => t.marketId === marketId && t.user === currentUser)
+    .reduce((a, t) => a + t.coins, 0);
+  if (mySpent + coins > m.maxBet) {
+    return showToast(`Limite de ${m.maxBet} 🪙 par marché. Déjà misé: ${mySpent.toFixed(0)} 🪙. Reste: ${(m.maxBet - mySpent).toFixed(0)} 🪙.`, 'error');
+  }
+
+  // Anti-pump check
+  const probBefore = lmsrProb(m.qYes, m.qNo, m.b);
+  const shares = sharesToReceive(m, tradeState.side, coins);
+
+  const newQY = m.qYes + (tradeState.side === 'yes' ? shares : 0);
+  const newQN = m.qNo  + (tradeState.side === 'no'  ? shares : 0);
+  const probAfter = lmsrProb(newQY, newQN, m.b);
+
+  if (Math.abs(probAfter - probBefore) > MAX_PRICE_MOVE) {
+    const move = Math.round(Math.abs(probAfter - probBefore) * 100);
+    return showToast(`Transaction trop grande ! Elle déplacerait le prix de ${move}% (max autorisé: ${MAX_PRICE_MOVE*100}%). Réduis ta mise.`, 'error');
+  }
+
+  // Commit
+  const newCoins = user.coins - coins;
+  const tx = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+    marketId, user: currentUser,
+    side: tradeState.side,
+    coins, shares,
+    probBefore, probAfter,
+    timestamp: Date.now()
+  };
+
+  try {
+    // Atomic-ish: update market quantities, user coins, insert transaction
+    await Promise.all([
+      dbUpdateMarket(marketId, { qYes: newQY, qNo: newQN }),
+      dbUpdateCoins(currentUser, newCoins),
+      dbInsertTx(tx),
+    ]);
+    await dbLoadAll();
+    updateHeader();
+    showToast(`✅ ${shares.toFixed(2)} parts ${tradeState.side === 'yes' ? 'OUI' : 'NON'} achetées !`, 'success');
+    // Re-fetch fresh market from state
+    const fresh = state.markets.find(x => x.id === marketId);
+    renderModal(fresh);
+    renderMarkets();
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur lors de la transaction.', 'error');
+  }
+}
+
+// ============================================================
+// RESOLVE MARKET
+// ============================================================
+
+async function resolveMarket(marketId, result) {
+  const m = state.markets.find(x => x.id === marketId);
+  if (!m || m.resolved) return;
+  if (!confirm(`Résoudre "${m.question.substring(0, 60)}…" → ${result === 'yes' ? 'OUI ✅' : 'NON ❌'} ?`)) return;
+
+  m.resolved = true;
+  m.resolution = result;
+  m.resolvedAt = Date.now();
+  m.hiddenFrom = []; // reveal to all
+
+  // Pay winners: each winning share = 1 coin
+  const byUser = {};
+  state.transactions.filter(t => t.marketId === marketId).forEach(t => {
+    if (!byUser[t.user]) byUser[t.user] = { yes: 0, no: 0 };
+    byUser[t.user][t.side] += t.shares;
+  });
+
+  try {
+    // Update market as resolved
+    await dbUpdateMarket(marketId, {
+      resolved: true,
+      resolution: result,
+      resolvedAt: Date.now(),
+      hiddenFrom: [],
+    });
+
+    // Pay out each winner
+    const payouts = Object.entries(byUser).map(([uname, pos]) => {
+      const winShares = result === 'yes' ? pos.yes : pos.no;
+      if (winShares > 0 && state.users[uname]) {
+        const newCoins = (state.users[uname].coins || 0) + winShares;
+        return dbUpdateCoins(uname, newCoins);
+      }
+      return Promise.resolve();
+    });
+    await Promise.all(payouts);
+
+    await dbLoadAll();
+    updateHeader();
+    showToast('Marché résolu ! Gains distribués. 🎉', 'success');
+    const fresh = state.markets.find(x => x.id === marketId);
+    renderModal(fresh);
+    renderMarkets();
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur lors de la résolution.', 'error');
+  }
+}
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+
+function renderLeaderboard() {
+  const resolved = state.markets.filter(m => m.resolved);
+
+  const data = Object.entries(state.users).map(([name, u]) => {
+    const txs = state.transactions.filter(t => t.user === name);
+    const participated = new Set(txs.map(t => t.marketId)).size;
+
+    let pnl = 0, marketsWon = 0, marketsLost = 0;
+    resolved.forEach(m => {
+      const myTx = txs.filter(t => t.marketId === m.id);
+      if (!myTx.length) return;
+      const spent = myTx.reduce((a, t) => a + t.coins, 0);
+      const wonShares = myTx.filter(t => t.side === m.resolution).reduce((a, t) => a + t.shares, 0);
+      pnl += wonShares - spent;
+      if (wonShares > 0) marketsWon++; else marketsLost++;
+    });
+
+    return { name, coins: u.coins, pnl, participated, marketsWon, marketsLost };
+  }).sort((a, b) => b.coins - a.coins);
+
+  const icons = ['🥇', '🥈', '🥉'];
+  const rankClass = (i) => i === 0 ? 'gold-r' : i === 1 ? 'silver-r' : i === 2 ? 'bronze-r' : '';
+
+  document.getElementById('leaderboard-list').innerHTML = data.map((u, i) => {
+    const pnlColor = u.pnl >= 0 ? 'var(--yes)' : 'var(--no)';
+    const winRate = (u.marketsWon + u.marketsLost) > 0
+      ? Math.round(u.marketsWon / (u.marketsWon + u.marketsLost) * 100) + '%'
+      : '—';
+    return `<div class="lb-row ${u.name === currentUser ? 'me' : ''}">
+      <div class="lb-rank ${rankClass(i)}">${icons[i] || i+1}</div>
+      <div class="lb-name">${u.name}${u.name === currentUser ? ' 👈' : ''}</div>
+      <div class="lb-stats">
+        <div class="lb-stat">
+          <div class="val">${Math.round(u.coins)} 🪙</div>
+          <div class="lbl">Solde</div>
+        </div>
+        <div class="lb-stat">
+          <div class="val" style="color:${pnlColor}">${u.pnl >= 0 ? '+' : ''}${u.pnl.toFixed(0)}</div>
+          <div class="lbl">P&L</div>
+        </div>
+        <div class="lb-stat">
+          <div class="val">${u.participated}</div>
+          <div class="lbl">Marchés</div>
+        </div>
+        <div class="lb-stat">
+          <div class="val">${winRate}</div>
+          <div class="lbl">Win rate</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// PROFILE
+// ============================================================
+
+function renderProfile() {
+  const user = state.users[currentUser];
+  if (!user) return;
+
+  const txs = state.transactions.filter(t => t.user === currentUser);
+  const resolved = state.markets.filter(m => m.resolved);
+  let totalWonCoins = 0, totalSpentResolved = 0, mWon = 0, mLost = 0;
+
+  resolved.forEach(m => {
+    const myTx = txs.filter(t => t.marketId === m.id);
+    if (!myTx.length) return;
+    const spent = myTx.reduce((a, t) => a + t.coins, 0);
+    const won = myTx.filter(t => t.side === m.resolution).reduce((a, t) => a + t.shares, 0);
+    totalSpentResolved += spent;
+    totalWonCoins += won;
+    if (won > 0) mWon++; else mLost++;
+  });
+
+  const pnl = totalWonCoins - totalSpentResolved;
+  const roi = totalSpentResolved > 0 ? (pnl / totalSpentResolved * 100).toFixed(0) + '%' : '—';
+  const participated = new Set(txs.map(t => t.marketId)).size;
+
+  document.getElementById('profile-avatar').textContent = currentUser[0].toUpperCase();
+  document.getElementById('profile-name').textContent = currentUser;
+  document.getElementById('profile-stats').innerHTML = `
+    <div class="pstat"><div class="val">${Math.round(user.coins)} 🪙</div><div class="lbl">Solde</div></div>
+    <div class="pstat"><div class="val">${participated}</div><div class="lbl">Marchés joués</div></div>
+    <div class="pstat"><div class="val">${mWon}</div><div class="lbl">Gagnés</div></div>
+    <div class="pstat"><div class="val" style="color:${pnl >= 0 ? 'var(--yes)' : 'var(--no)'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(0)}</div><div class="lbl">P&L</div></div>
+    <div class="pstat"><div class="val">${roi}</div><div class="lbl">ROI</div></div>
+  `;
+
+  // Active positions
+  const activeMkts = state.markets.filter(m => !m.resolved && txs.some(t => t.marketId === m.id));
+  document.getElementById('my-positions').innerHTML = activeMkts.length
+    ? activeMkts.map(m => {
+        const mt = txs.filter(t => t.marketId === m.id);
+        const yS = mt.filter(t => t.side === 'yes').reduce((a, t) => a + t.shares, 0);
+        const nS = mt.filter(t => t.side === 'no').reduce((a, t) => a + t.shares, 0);
+        const spent = mt.reduce((a, t) => a + t.coins, 0);
+        const prob = lmsrProb(m.qYes, m.qNo, m.b);
+        return `<div class="market-card" onclick="openMarket('${m.id}')">
+          <div class="market-question">${renderQuestion(m.question)}</div>
+          <div class="prob-bar" style="margin-bottom:6px"><div class="prob-fill" style="width:${Math.round(prob*100)}%"></div></div>
+          <div class="prob-labels"><span class="yes-label">OUI ${Math.round(prob*100)}%</span><span class="no-label">NON ${Math.round((1-prob)*100)}%</span></div>
+          <div class="position-row">
+            ${yS > 0 ? `<span class="yes-text">${yS.toFixed(2)} pts OUI</span>` : ''}
+            ${nS > 0 ? `<span class="no-text">${nS.toFixed(2)} pts NON</span>` : ''}
+            <span class="mono gold">${spent.toFixed(0)} 🪙 investis</span>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="empty-state"><div class="emoji">📭</div><div>Aucune position active.</div></div>';
+
+  // Transaction history
+  const recentTx = [...txs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 25);
+  document.getElementById('my-history').innerHTML = recentTx.length
+    ? recentTx.map(t => {
+        const m = state.markets.find(x => x.id === t.marketId);
+        const q = m ? m.question.substring(0, 45) + '…' : '—';
+        return `<div class="tx-row">
+          <span style="flex:1;min-width:160px">${q}</span>
+          <span class="${t.side === 'yes' ? 'yes-text' : 'no-text'}">${t.side.toUpperCase()}</span>
+          <span class="mono">${t.coins.toFixed(0)} 🪙 → ${t.shares.toFixed(2)} parts</span>
+          <span style="color:var(--muted)">${new Date(t.timestamp).toLocaleDateString('fr')}</span>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--muted);padding:20px;text-align:center">Aucune transaction.</div>';
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+  document.querySelectorAll('.toast').forEach(e => e.remove());
+  clearTimeout(toastTimer);
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  toastTimer = setTimeout(() => el.remove(), 4000);
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+
+async function boot() {
+  // Show loading state on login screen
+  const loginCard = document.querySelector('.login-card');
+  loginCard.innerHTML = `
+    <div class="login-logo">⚡ FriendMarket</div>
+    <div class="login-sub" style="margin-bottom:24px">Connexion à la base de données…</div>
+    <div style="color:var(--muted);font-size:0.85rem">⏳ Chargement en cours</div>
+  `;
+
+  try {
+    await dbLoadAll();
+    // Restore login UI
+    loginCard.innerHTML = `
+      <div class="login-logo">⚡ FriendMarket</div>
+      <div class="login-sub">Marchés prédictifs virtuels entre amis</div>
+      <select class="login-select" id="login-select">
+        <option value="">— Choisir un profil existant —</option>
+      </select>
+      <div style="color:var(--muted);font-size:0.75rem;margin-bottom:10px;">ou créer un nouveau compte</div>
+      <input type="text" class="login-input" id="login-name" placeholder="Entre ton prénom" maxlength="20">
+      <button class="btn-primary" onclick="loginUser()">Entrer dans l'arène ↗</button>
+    `;
+    initLogin();
+  } catch(e) {
+    console.error(e);
+    loginCard.innerHTML = `
+      <div class="login-logo">⚡ FriendMarket</div>
+      <div style="color:var(--no);margin-top:16px;font-size:0.9rem">
+        ❌ Impossible de se connecter à Supabase.<br><br>
+        Vérifie tes clés <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> en haut du fichier.
+      </div>
+    `;
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
