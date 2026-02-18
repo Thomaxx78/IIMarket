@@ -36,18 +36,21 @@ function renderModal(m) {
   }
 
   // Trade section
+  const alreadyBet = myTx.length > 0;
   const maxAllowed = Math.min(remaining, state.users[currentUser]?.coins ?? 0);
   let tradeSection = '';
   if (!m.resolved) {
-    if (maxAllowed < 1) {
-      tradeSection = `<div class="info-box">⚠️ Tu as atteint ta limite de mise sur ce marché (${m.maxBet} 🪙 max). Attends la résolution !</div>`;
+    if (alreadyBet) {
+      tradeSection = `<div class="info-box">🔒 Tu as déjà parié sur ce marché. Une seule mise par joueur et par marché.</div>`;
+    } else if (maxAllowed < 1) {
+      tradeSection = `<div class="info-box">⚠️ Tu n'as pas assez de coins.</div>`;
     } else {
       tradeSection = `
       <div class="trade-tabs">
         <button class="trade-tab yes active" id="tab-yes" onclick="setTradeSide('yes','${m.id}')">🟢 OUI</button>
         <button class="trade-tab no" id="tab-no" onclick="setTradeSide('no','${m.id}')">🔴 NON</button>
       </div>
-      <label>Mise en coins (max ${Math.floor(maxAllowed)} 🪙 — limite marché: ${m.maxBet})</label>
+      <label>Mise en coins (max ${Math.floor(maxAllowed)} 🪙)</label>
       <input type="number" id="trade-amount" value="10" min="1" max="${Math.floor(maxAllowed)}" step="1" oninput="updateCostPreview('${m.id}')">
       <div class="cost-preview" id="cost-preview">
         <div class="cost-row"><span>Parts reçues</span><span class="val" id="prev-shares">—</span></div>
@@ -149,11 +152,12 @@ async function executeTrade(marketId) {
   const user = state.users[currentUser];
   if (coins > user.coins) return showToast('Pas assez de coins !', 'error');
 
-  const mySpent = state.transactions
-    .filter(t => t.marketId === marketId && t.user === currentUser)
-    .reduce((a, t) => a + t.coins, 0);
-  if (mySpent + coins > m.maxBet) {
-    return showToast(`Limite de ${m.maxBet} 🪙 par marché. Déjà misé: ${mySpent.toFixed(0)} 🪙. Reste: ${(m.maxBet - mySpent).toFixed(0)} 🪙.`, 'error');
+  const myTxCheck = state.transactions.filter(t => t.marketId === marketId && t.user === currentUser);
+  if (myTxCheck.length > 0) {
+    return showToast('Tu as déjà parié sur ce marché.', 'error');
+  }
+  if (coins > m.maxBet) {
+    return showToast(`Mise maximum : ${m.maxBet} 🪙.`, 'error');
   }
 
   const probBefore = lmsrProb(m.qYes, m.qNo, m.b);
