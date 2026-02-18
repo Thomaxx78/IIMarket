@@ -21,6 +21,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function showLoginForm() {
+  const loginCard = document.querySelector('.login-card');
+  loginCard.innerHTML = `
+    <div class="login-logo">⚡ FriendMarket</div>
+    <div class="login-sub">Marchés prédictifs virtuels entre amis</div>
+    <select class="login-select" id="login-select">
+      <option value="">— Choisir un profil existant —</option>
+    </select>
+    <div style="color:var(--muted);font-size:0.75rem;margin-bottom:10px;">ou créer un nouveau compte</div>
+    <input type="text" class="login-input" id="login-name" placeholder="Entre ton prénom" maxlength="20">
+    <button class="btn-primary" onclick="loginUser()">Entrer dans l'arène ↗</button>
+  `;
+  initLogin();
+}
+
 async function boot() {
   const loginCard = document.querySelector('.login-card');
   loginCard.innerHTML = `
@@ -31,7 +46,12 @@ async function boot() {
 
   try {
     initSupabase();
-    await dbLoadAll();
+
+    // Timeout 12s — évite de rester bloqué indéfiniment
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 12000)
+    );
+    await Promise.race([dbLoadAll(), timeout]);
 
     // Auto-login si session sauvegardée
     const savedUser = localStorage.getItem(LS_USER_KEY);
@@ -41,25 +61,16 @@ async function boot() {
       return;
     }
 
-    loginCard.innerHTML = `
-      <div class="login-logo">⚡ FriendMarket</div>
-      <div class="login-sub">Marchés prédictifs virtuels entre amis</div>
-      <select class="login-select" id="login-select">
-        <option value="">— Choisir un profil existant —</option>
-      </select>
-      <div style="color:var(--muted);font-size:0.75rem;margin-bottom:10px;">ou créer un nouveau compte</div>
-      <input type="text" class="login-input" id="login-name" placeholder="Entre ton prénom" maxlength="20">
-      <button class="btn-primary" onclick="loginUser()">Entrer dans l'arène ↗</button>
-    `;
-    initLogin();
+    showLoginForm();
   } catch(e) {
     console.error(e);
+    const msg = e.message === 'timeout'
+      ? 'Délai dépassé. Vérifie ta connexion internet.'
+      : 'Impossible de se connecter à Supabase.';
     loginCard.innerHTML = `
       <div class="login-logo">⚡ FriendMarket</div>
-      <div style="color:var(--no);margin-top:16px;font-size:0.9rem">
-        ❌ Impossible de se connecter à Supabase.<br><br>
-        Vérifie tes clés <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> dans <code>js/config.js</code>.
-      </div>
+      <div style="color:var(--no);margin-top:16px;font-size:0.9rem;margin-bottom:20px;">❌ ${msg}</div>
+      <button class="btn-primary" onclick="boot()">🔄 Réessayer</button>
     `;
   }
 }
