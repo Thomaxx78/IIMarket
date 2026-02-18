@@ -160,9 +160,11 @@ async function executeTrade(marketId) {
     return showToast(`Mise maximum : ${m.maxBet} 🪙.`, 'error');
   }
 
-  const shares = sharesToReceive(m, tradeState.side, coins);
-  const newQY  = m.qYes + (tradeState.side === 'yes' ? shares : 0);
-  const newQN  = m.qNo  + (tradeState.side === 'no'  ? shares : 0);
+  const probBefore = lmsrProb(m.qYes, m.qNo, m.b);
+  const shares     = sharesToReceive(m, tradeState.side, coins);
+  const newQY      = m.qYes + (tradeState.side === 'yes' ? shares : 0);
+  const newQN      = m.qNo  + (tradeState.side === 'no'  ? shares : 0);
+  const probAfter  = lmsrProb(newQY, newQN, m.b);
 
   const newCoins = user.coins - coins;
   const tx = {
