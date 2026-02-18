@@ -1,6 +1,8 @@
 // ============================================================
-// AUTH — Login
+// AUTH — Login persistant via localStorage
 // ============================================================
+
+const LS_USER_KEY = 'fm_user';
 
 function initLogin() {
   const sel = document.getElementById('login-select');
@@ -29,12 +31,27 @@ async function loginUser() {
     }
 
     currentUser = name;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
-    subscribeRealtime();
+    localStorage.setItem(LS_USER_KEY, name);
+    enterApp();
   } catch(e) {
     console.error(e);
     showToast('Erreur de connexion à la base de données.', 'error');
   }
+}
+
+function logoutUser() {
+  localStorage.removeItem(LS_USER_KEY);
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  // Reset nav
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-markets').classList.add('active');
+}
+
+function enterApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+  subscribeRealtime();
 }

@@ -44,6 +44,7 @@
       </nav>
       <div class="header-right">
         <div class="wallet-badge" id="wallet-display">1000 🪙</div>
+        <button class="btn-sm" id="notif-btn" onclick="requestNotifPermission()" title="Activer les notifications">🔔</button>
         <div class="user-badge" id="user-display">?</div>
       </div>
     </div>
@@ -83,6 +84,9 @@
         <div style="font-size:1.3rem;font-weight:800;margin-bottom:12px;" id="profile-name"></div>
         <div class="profile-stats" id="profile-stats"></div>
       </div>
+    </div>
+    <div style="margin-bottom:24px;">
+      <button class="btn-sm" onclick="logoutUser()" style="color:var(--no);border-color:var(--no);">↩ Se déconnecter</button>
     </div>
     <div class="section-header"><span class="section-title">📋 Mes positions actives</span></div>
     <div class="markets-grid" id="my-positions"></div>

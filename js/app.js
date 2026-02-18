@@ -32,6 +32,15 @@ async function boot() {
   try {
     initSupabase();
     await dbLoadAll();
+
+    // Auto-login si session sauvegardée
+    const savedUser = localStorage.getItem(LS_USER_KEY);
+    if (savedUser && state.users[savedUser]) {
+      currentUser = savedUser;
+      enterApp();
+      return;
+    }
+
     loginCard.innerHTML = `
       <div class="login-logo">⚡ FriendMarket</div>
       <div class="login-sub">Marchés prédictifs virtuels entre amis</div>

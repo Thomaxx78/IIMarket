@@ -2,7 +2,6 @@
 // PUSH NOTIFICATIONS — Web Push (iOS 16.4+ & Android)
 // ============================================================
 
-// Affiché une seule fois pour guider les users iOS
 function showIosBanner() {
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isInStandalone = window.navigator.standalone;
@@ -30,7 +29,6 @@ function showIosBanner() {
   document.body.appendChild(banner);
 }
 
-// Convertit la clé VAPID base64url → Uint8Array (requis par pushManager.subscribe)
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -38,7 +36,6 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
-// Enregistre (ou récupère) la push subscription et la sauvegarde en DB
 async function subscribeToPush() {
   if (!('PushManager' in window)) return null;
 
@@ -53,11 +50,13 @@ async function subscribeToPush() {
       });
     } catch (err) {
       console.warn('[Push] Subscription failed:', err);
+      updateNotifButton();
       return null;
     }
   }
 
   await savePushSubscription(sub);
+  updateNotifButton();
   return sub;
 }
 
@@ -75,11 +74,62 @@ async function savePushSubscription(sub) {
   if (error) console.error('[Push] Save subscription error:', error);
 }
 
+// Appelé au clic sur le bouton 🔔 dans le header
+async function requestNotifPermission() {
+  if (!('Notification' in window)) {
+    showToast('Les notifications ne sont pas supportées sur ce navigateur.', 'error');
+    return;
+  }
+
+  if (Notification.permission === 'denied') {
+    showToast('Notifications bloquées. Active-les dans les réglages du navigateur.', 'error');
+    return;
+  }
+
+  if (Notification.permission === 'granted') {
+    await subscribeToPush();
+    showToast('Notifications déjà activées ✅', 'success');
+    return;
+  }
+
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    await subscribeToPush();
+    showToast('Notifications activées ! 🔔', 'success');
+  } else {
+    showToast('Permission refusée.', 'error');
+  }
+  updateNotifButton();
+}
+
+// Met à jour l'icône du bouton selon l'état de la permission
+function updateNotifButton() {
+  const btn = document.getElementById('notif-btn');
+  if (!btn) return;
+
+  if (!('Notification' in window)) {
+    btn.style.display = 'none';
+    return;
+  }
+
+  const perm = Notification.permission;
+  btn.title = perm === 'granted' ? 'Notifications activées'
+            : perm === 'denied'  ? 'Notifications bloquées (réglages navigateur)'
+            : 'Activer les notifications';
+
+  btn.textContent = perm === 'granted' ? '🔔'
+                  : perm === 'denied'  ? '🔕'
+                  : '🔔';
+
+  btn.style.opacity    = perm === 'denied' ? '0.5' : '1';
+  btn.style.background = perm === 'granted' ? 'rgba(16,185,129,0.15)' : '';
+  btn.style.borderColor = perm === 'granted' ? 'var(--yes)' : '';
+}
+
 // Point d'entrée appelé après login
 async function initPush() {
   if (!('serviceWorker' in navigator)) return;
 
-  // Enregistre le service worker
   try {
     await navigator.serviceWorker.register('/service-worker.js');
   } catch (err) {
@@ -87,29 +137,17 @@ async function initPush() {
     return;
   }
 
-  // iOS : montrer le banner si pas encore en standalone
   showIosBanner();
+  updateNotifButton();
 
-  // Demander la permission si pas encore décidé
-  if (Notification.permission === 'default') {
-    // Délai de 2s pour ne pas spammer l'utilisateur dès l'ouverture
-    setTimeout(async () => {
-      const perm = await Notification.requestPermission();
-      if (perm === 'granted') await subscribeToPush();
-    }, 2000);
-  } else if (Notification.permission === 'granted') {
+  // Si permission déjà accordée → re-subscribe silencieusement
+  if (Notification.permission === 'granted') {
     await subscribeToPush();
   }
 }
 
-// ── Envoi d'une notification via Edge Function ───────────────
+// ── Envoi via Edge Function ───────────────────────────────────
 
-/**
- * @param {string} title
- * @param {string} body
- * @param {string[]} recipients  — noms des users à notifier
- * @param {string} [url]         — url à ouvrir au clic
- */
 async function sendPushNotification(title, body, recipients, url = '/') {
   if (!recipients || recipients.length === 0) return;
 
