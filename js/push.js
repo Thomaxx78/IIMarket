@@ -102,28 +102,36 @@ async function requestNotifPermission() {
   updateNotifButton();
 }
 
-// Met à jour l'icône du bouton selon l'état de la permission
+// Met à jour le bouton et le texte selon l'état de la permission
 function updateNotifButton() {
-  const btn = document.getElementById('notif-btn');
-  if (!btn) return;
+  const btn  = document.getElementById('notif-btn');
+  const card = document.getElementById('notif-card');
+  const sub  = document.getElementById('notif-status-text');
+
+  if (!card) return;
 
   if (!('Notification' in window)) {
-    btn.style.display = 'none';
+    card.style.display = 'none';
     return;
   }
 
   const perm = Notification.permission;
-  btn.title = perm === 'granted' ? 'Notifications activées'
-            : perm === 'denied'  ? 'Notifications bloquées (réglages navigateur)'
-            : 'Activer les notifications';
 
-  btn.textContent = perm === 'granted' ? '🔔'
-                  : perm === 'denied'  ? '🔕'
-                  : '🔔';
+  if (btn) {
+    btn.textContent = perm === 'granted' ? 'Activées ✅'
+                    : perm === 'denied'  ? 'Bloquées 🔕'
+                    : 'Activer 🔔';
+    btn.style.opacity  = perm === 'denied' ? '0.5' : '1';
+    btn.disabled       = perm === 'denied';
+  }
 
-  btn.style.opacity    = perm === 'denied' ? '0.5' : '1';
-  btn.style.background = perm === 'granted' ? 'rgba(16,185,129,0.15)' : '';
-  btn.style.borderColor = perm === 'granted' ? 'var(--yes)' : '';
+  if (sub) {
+    sub.textContent = perm === 'granted' ? 'Tu recevras des notifications pour les nouveaux marchés et résolutions.'
+                    : perm === 'denied'  ? 'Notifications bloquées. Active-les dans les réglages du navigateur.'
+                    : 'Reçois une notif quand un marché est créé ou résolu';
+  }
+
+  card.style.borderColor = perm === 'granted' ? 'var(--yes)' : '';
 }
 
 // Point d'entrée appelé après login
