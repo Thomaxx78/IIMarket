@@ -36,11 +36,12 @@
   <header>
     <div class="header-inner">
       <div class="logo" onclick="navigate('markets')">⚡ FriendMarket</div>
-      <nav>
-        <button class="nav-btn active" id="nav-markets" onclick="navigate('markets')">Marchés</button>
-        <button class="nav-btn" id="nav-leaderboard" onclick="navigate('leaderboard')">Classement</button>
-        <button class="nav-btn" id="nav-profile" onclick="navigate('profile')">Profil</button>
-        <button class="nav-btn" id="nav-create" onclick="navigate('create')">+ Créer</button>
+      <!-- Top nav desktop uniquement -->
+      <nav class="top-nav">
+        <button class="nav-btn active" id="nav-markets-top" onclick="navigate('markets')">Marchés</button>
+        <button class="nav-btn" id="nav-leaderboard-top" onclick="navigate('leaderboard')">Classement</button>
+        <button class="nav-btn" id="nav-profile-top" onclick="navigate('profile')">Profil</button>
+        <button class="nav-btn" id="nav-create-top" onclick="navigate('create')">+ Créer</button>
       </nav>
       <div class="header-right">
         <div class="wallet-badge" id="wallet-display">1000 🪙</div>
@@ -49,6 +50,25 @@
       </div>
     </div>
   </header>
+
+  <!-- Bottom nav mobile -->
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" id="nav-markets" onclick="navigate('markets')">
+      <span class="bnav-icon">🏪</span>
+      <span>Marchés</span>
+    </button>
+    <button class="bnav-btn" id="nav-leaderboard" onclick="navigate('leaderboard')">
+      <span class="bnav-icon">🏆</span>
+      <span>Classement</span>
+    </button>
+    <button class="bnav-btn bnav-create" id="nav-create" onclick="navigate('create')">
+      <span class="bnav-create-inner">＋</span>
+    </button>
+    <button class="bnav-btn" id="nav-profile" onclick="navigate('profile')">
+      <span class="bnav-icon">👤</span>
+      <span>Profil</span>
+    </button>
+  </nav>
 
   <!-- MARKETS -->
   <div class="page active" id="page-markets">
