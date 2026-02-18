@@ -1,0 +1,8 @@
+{
+  "name": "iimarket",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node scripts/generate-config.js",
+    "vercel-build": "node scripts/generate-config.js"
+  }
+}

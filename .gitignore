@@ -1,3 +1,6 @@
+# Config avec clés — ne jamais committer
+js/config.js
+
 # macOS
 .DS_Store
 .AppleDouble
