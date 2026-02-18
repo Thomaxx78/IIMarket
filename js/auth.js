@@ -44,9 +44,9 @@ function logoutUser() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
-  // Reset nav
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-markets').classList.add('active');
+  boot();
 }
 
 function enterApp() {
