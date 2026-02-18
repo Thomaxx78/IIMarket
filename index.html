@@ -148,13 +148,8 @@
       </select>
       <label>Date de résolution</label>
       <input type="date" id="new-date">
-      <label>Paramètre de liquidité b (20–200) — plus grand = prix plus stable</label>
-      <input type="number" id="new-b" value="50" min="20" max="200">
       <label>Mise maximum par joueur (coins)</label>
       <input type="number" id="new-max-bet" value="200" min="10" max="500">
-      <div class="info-box">
-        💡 <b>LMSR</b> : Le prix évolue automatiquement selon les mises. b=50 → perte max système ≈ 35 coins. b=100 → ≈ 70 coins. Plus b est élevé, plus les prix sont stables mais moins sensibles.
-      </div>
       <button class="btn-primary" onclick="createMarket()">Créer le marché 🚀</button>
     </div>
   </div>

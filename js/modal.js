@@ -160,16 +160,9 @@ async function executeTrade(marketId) {
     return showToast(`Mise maximum : ${m.maxBet} 🪙.`, 'error');
   }
 
-  const probBefore = lmsrProb(m.qYes, m.qNo, m.b);
-  const shares     = sharesToReceive(m, tradeState.side, coins);
-  const newQY      = m.qYes + (tradeState.side === 'yes' ? shares : 0);
-  const newQN      = m.qNo  + (tradeState.side === 'no'  ? shares : 0);
-  const probAfter  = lmsrProb(newQY, newQN, m.b);
-
-  if (Math.abs(probAfter - probBefore) > MAX_PRICE_MOVE) {
-    const move = Math.round(Math.abs(probAfter - probBefore) * 100);
-    return showToast(`Transaction trop grande ! Elle déplacerait le prix de ${move}% (max autorisé: ${MAX_PRICE_MOVE*100}%). Réduis ta mise.`, 'error');
-  }
+  const shares = sharesToReceive(m, tradeState.side, coins);
+  const newQY  = m.qYes + (tradeState.side === 'yes' ? shares : 0);
+  const newQN  = m.qNo  + (tradeState.side === 'no'  ? shares : 0);
 
   const newCoins = user.coins - coins;
   const tx = {

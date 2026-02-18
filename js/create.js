@@ -6,14 +6,13 @@ async function createMarket() {
   const question    = getEditorText();
   const category    = document.getElementById('new-category').value;
   const resolveDate = document.getElementById('new-date').value;
-  const b           = parseFloat(document.getElementById('new-b').value);
+  const b           = 30;
   const maxBet      = parseFloat(document.getElementById('new-max-bet').value);
   const hiddenFrom  = getHiddenFrom();
 
-  if (!question)   return showToast('Entre une question !', 'error');
+  if (!question)    return showToast('Entre une question !', 'error');
   if (!resolveDate) return showToast('Choisis une date de résolution.', 'error');
-  if (isNaN(b) || b < 20 || b > 200) return showToast('b doit être entre 20 et 200.', 'error');
-  if (isNaN(maxBet) || maxBet < 10)  return showToast('Mise max invalide.', 'error');
+  if (isNaN(maxBet) || maxBet < 10) return showToast('Mise max invalide.', 'error');
 
   const market = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
