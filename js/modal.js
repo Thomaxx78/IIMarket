@@ -347,8 +347,9 @@ async function requestResolution(marketId, result) {
   const m = state.markets.find(x => x.id === marketId);
   if (!m || m.resolved) return;
 
-  const candidates = Object.keys(state.users).filter(n => n !== currentUser);
-  if (candidates.length === 0) return showToast('Aucun autre joueur pour valider.', 'error');
+  const hiddenFrom = m.hiddenFrom || [];
+  const candidates = Object.keys(state.users).filter(n => n !== currentUser && !hiddenFrom.includes(n));
+  if (candidates.length === 0) return showToast('Aucun autre joueur visible pour valider.', 'error');
 
   const validator = candidates[Math.floor(Math.random() * candidates.length)];
   const req = { result, requestedBy: currentUser, requestedAt: Date.now(), validator };
