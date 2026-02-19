@@ -148,15 +148,37 @@ function renderModal(m) {
     </div>`).join('')}`;
   }
 
-  // Resolve (creator only)
+  // Validation section (for the randomly picked validator)
+  let validationSection = '';
+  if (!m.resolved && m.resolutionRequest && m.resolutionRequest.validator === currentUser) {
+    const resFr = m.resolutionRequest.result === 'yes' ? 'OUI ✅' : 'NON ❌';
+    validationSection = `<div class="divider"></div>
+    <div style="font-size:0.8rem;font-weight:700;color:var(--accent);margin-bottom:10px;">🗳️ VOTE REQUIS — TOI SEUL DÉCIDES</div>
+    <div class="info-box"><b>${m.resolutionRequest.requestedBy}</b> demande de clore ce marché → <b>${resFr}</b><br>Es-tu d'accord avec ce résultat ?</div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn-sm" style="flex:1;background:rgba(16,185,129,0.12);border-color:var(--yes);color:var(--yes);" onclick="approveResolution('${m.id}')">✅ Confirmer</button>
+      <button class="btn-sm" style="flex:1;background:rgba(239,68,68,0.12);border-color:var(--no);color:var(--no);" onclick="rejectResolution('${m.id}')">❌ Rejeter</button>
+    </div>`;
+  }
+
+  // Resolve section (creator only)
   let resolveSection = '';
   if (!m.resolved && m.creator === currentUser) {
-    resolveSection = `<div class="divider"></div>
-    <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;">RÉSOUDRE CE MARCHÉ (créateur uniquement)</div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn-sm" style="flex:1;background:rgba(16,185,129,0.12);border-color:var(--yes);color:var(--yes);" onclick="resolveMarket('${m.id}','yes')">✅ Résoudre OUI</button>
-      <button class="btn-sm" style="flex:1;background:rgba(239,68,68,0.12);border-color:var(--no);color:var(--no);" onclick="resolveMarket('${m.id}','no')">❌ Résoudre NON</button>
-    </div>`;
+    if (m.resolutionRequest) {
+      const resFr = m.resolutionRequest.result === 'yes' ? 'OUI ✅' : 'NON ❌';
+      resolveSection = `<div class="divider"></div>
+      <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;">RÉSOLUTION EN ATTENTE</div>
+      <div class="info-box">⏳ Demande envoyée à <b>${m.resolutionRequest.validator}</b> pour valider → ${resFr}</div>
+      <button class="btn-sm" style="width:100%;margin-top:8px;background:rgba(239,68,68,0.08);border-color:var(--no);color:var(--no);" onclick="cancelResolutionRequest('${m.id}')">Annuler la demande</button>`;
+    } else {
+      resolveSection = `<div class="divider"></div>
+      <div style="font-size:0.8rem;font-weight:700;color:var(--muted);margin-bottom:10px;">RÉSOUDRE CE MARCHÉ (créateur uniquement)</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm" style="flex:1;background:rgba(16,185,129,0.12);border-color:var(--yes);color:var(--yes);" onclick="requestResolution('${m.id}','yes')">✅ Proposer OUI</button>
+        <button class="btn-sm" style="flex:1;background:rgba(239,68,68,0.12);border-color:var(--no);color:var(--no);" onclick="requestResolution('${m.id}','no')">❌ Proposer NON</button>
+      </div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:6px;text-align:center;">Un joueur aléatoire devra confirmer.</div>`;
+    }
   }
 
   document.getElementById('modal-content').innerHTML = `
@@ -175,6 +197,7 @@ function renderModal(m) {
       ${tradeSection}
       ${posSection}
       ${histSection}
+      ${validationSection}
       ${resolveSection}
     </div>`;
 
@@ -256,10 +279,10 @@ async function executeTrade(marketId) {
   }
 }
 
+// ── Résolution effective (interne) ────────────────────────────
 async function resolveMarket(marketId, result) {
   const m = state.markets.find(x => x.id === marketId);
   if (!m || m.resolved) return;
-  if (!confirm(`Résoudre "${m.question.substring(0, 60)}…" → ${result === 'yes' ? 'OUI ✅' : 'NON ❌'} ?`)) return;
 
   const byUser = {};
   state.transactions.filter(t => t.marketId === marketId).forEach(t => {
@@ -267,45 +290,109 @@ async function resolveMarket(marketId, result) {
     byUser[t.user][t.side] += t.shares;
   });
 
+  await dbUpdateMarket(marketId, {
+    resolved: true,
+    resolution: result,
+    resolvedAt: Date.now(),
+    hiddenFrom: [],
+    resolutionRequest: null,
+  });
+
+  const payouts = Object.entries(byUser).map(([uname, pos]) => {
+    const winShares = result === 'yes' ? pos.yes : pos.no;
+    if (winShares > 0 && state.users[uname]) {
+      const newCoins = (state.users[uname].coins || 0) + winShares;
+      return dbUpdateCoins(uname, newCoins);
+    }
+    return Promise.resolve();
+  });
+  await Promise.all(payouts);
+
+  await dbLoadAll();
+  updateHeader();
+  showToast('Marché résolu ! Gains distribués. 🎉', 'success');
+
+  const participants = [...new Set(
+    state.transactions.filter(t => t.marketId === marketId).map(t => t.user)
+  )];
+  const shortQ   = m.question.length > 60 ? m.question.slice(0, 57) + '…' : m.question;
+  const resultFr = result === 'yes' ? 'OUI ✅' : 'NON ❌';
+  sendPushNotification(`🏁 Marché résolu — ${resultFr}`, shortQ, participants);
+
+  const fresh = state.markets.find(x => x.id === marketId);
+  renderModal(fresh);
+  renderMarkets();
+}
+
+// ── Demande de résolution (créateur) ──────────────────────────
+async function requestResolution(marketId, result) {
+  const m = state.markets.find(x => x.id === marketId);
+  if (!m || m.resolved) return;
+
+  const candidates = Object.keys(state.users).filter(n => n !== currentUser);
+  if (candidates.length === 0) return showToast('Aucun autre joueur pour valider.', 'error');
+
+  const validator = candidates[Math.floor(Math.random() * candidates.length)];
+  const req = { result, requestedBy: currentUser, requestedAt: Date.now(), validator };
+
   try {
-    await dbUpdateMarket(marketId, {
-      resolved: true,
-      resolution: result,
-      resolvedAt: Date.now(),
-      hiddenFrom: [],
-    });
-
-    const payouts = Object.entries(byUser).map(([uname, pos]) => {
-      const winShares = result === 'yes' ? pos.yes : pos.no;
-      if (winShares > 0 && state.users[uname]) {
-        const newCoins = (state.users[uname].coins || 0) + winShares;
-        return dbUpdateCoins(uname, newCoins);
-      }
-      return Promise.resolve();
-    });
-    await Promise.all(payouts);
-
+    await dbUpdateMarket(marketId, { resolutionRequest: req });
     await dbLoadAll();
-    updateHeader();
-    showToast('Marché résolu ! Gains distribués. 🎉', 'success');
-
-    // Notifier tous les participants
-    const participants = [...new Set(
-      state.transactions.filter(t => t.marketId === marketId).map(t => t.user)
-    )];
-    const shortQ   = m.question.length > 60 ? m.question.slice(0, 57) + '…' : m.question;
-    const resultFr = result === 'yes' ? 'OUI ✅' : 'NON ❌';
+    showToast(`Demande envoyée à ${validator} pour validation. ⏳`, 'success');
     sendPushNotification(
-      `🏁 Marché résolu — ${resultFr}`,
-      shortQ,
-      participants
+      `🗳️ Vote requis — FriendMarket`,
+      `${currentUser} demande de résoudre "${m.question.slice(0, 55)}" → ${result === 'yes' ? 'OUI' : 'NON'}`,
+      [validator]
     );
-
-    const fresh = state.markets.find(x => x.id === marketId);
-    renderModal(fresh);
+    renderModal(state.markets.find(x => x.id === marketId));
     renderMarkets();
   } catch(e) {
     console.error(e);
+    showToast('Erreur lors de la demande.', 'error');
+  }
+}
+
+// ── Validation (joueur aléatoire) ─────────────────────────────
+async function approveResolution(marketId) {
+  const m = state.markets.find(x => x.id === marketId);
+  if (!m || m.resolved || !m.resolutionRequest) return;
+  try {
+    await resolveMarket(marketId, m.resolutionRequest.result);
+  } catch(e) {
+    console.error(e);
     showToast('Erreur lors de la résolution.', 'error');
+  }
+}
+
+async function rejectResolution(marketId) {
+  const m = state.markets.find(x => x.id === marketId);
+  if (!m || !m.resolutionRequest) return;
+  const creator = m.creator;
+  try {
+    await dbUpdateMarket(marketId, { resolutionRequest: null });
+    await dbLoadAll();
+    showToast('Demande rejetée.', 'info');
+    sendPushNotification(
+      `❌ Demande rejetée`,
+      `${currentUser} a rejeté ta demande de résolution pour "${m.question.slice(0, 55)}"`,
+      [creator]
+    );
+    renderModal(state.markets.find(x => x.id === marketId));
+    renderMarkets();
+  } catch(e) {
+    console.error(e);
+    showToast('Erreur.', 'error');
+  }
+}
+
+async function cancelResolutionRequest(marketId) {
+  try {
+    await dbUpdateMarket(marketId, { resolutionRequest: null });
+    await dbLoadAll();
+    showToast('Demande annulée.', 'info');
+    renderModal(state.markets.find(x => x.id === marketId));
+    renderMarkets();
+  } catch(e) {
+    showToast('Erreur.', 'error');
   }
 }

@@ -15,6 +15,30 @@ function renderMarkets() {
   const resolved = all.filter(m => m.resolved);
   const totalVol = state.transactions.reduce((a, t) => a + t.coins, 0);
 
+  // Votes en attente pour l'utilisateur courant
+  const pendingVotes = state.markets.filter(m =>
+    !m.resolved && m.resolutionRequest && m.resolutionRequest.validator === currentUser
+  );
+  const pendingEl = document.getElementById('pending-validations');
+  if (pendingEl) {
+    if (pendingVotes.length > 0) {
+      pendingEl.innerHTML = pendingVotes.map(m => {
+        const resFr = m.resolutionRequest.result === 'yes' ? 'OUI ✅' : 'NON ❌';
+        return `<div class="pending-vote-item" onclick="openMarket('${m.id}')">
+          <span class="pending-vote-icon">🗳️</span>
+          <div class="pending-vote-text">
+            <b>${m.resolutionRequest.requestedBy}</b> demande de résoudre → <b>${resFr}</b>
+            <div class="pending-vote-q">${m.question.length > 55 ? m.question.slice(0, 52) + '…' : m.question}</div>
+          </div>
+          <span class="pending-vote-cta">Voter →</span>
+        </div>`;
+      }).join('');
+      pendingEl.style.display = 'block';
+    } else {
+      pendingEl.style.display = 'none';
+    }
+  }
+
   document.getElementById('global-stats').innerHTML = `
     <div class="stat-card"><div class="val">${open.length}</div><div class="lbl">Marchés actifs</div></div>
     <div class="stat-card"><div class="val">${Object.keys(state.users).length}</div><div class="lbl">Joueurs</div></div>

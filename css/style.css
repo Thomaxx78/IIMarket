@@ -569,6 +569,23 @@ textarea { resize: vertical; min-height: 90px; }
 
 .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
+/* Pending vote banner */
+.pending-vote-item {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(124,58,237,0.10);
+  border: 1px solid rgba(124,58,237,0.35);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background 0.15s;
+}
+.pending-vote-item:active { background: rgba(124,58,237,0.18); }
+.pending-vote-icon { font-size: 1.4rem; flex-shrink: 0; }
+.pending-vote-text { flex: 1; font-size: 0.82rem; line-height: 1.4; color: var(--text); }
+.pending-vote-q { color: var(--muted); font-size: 0.75rem; margin-top: 2px; }
+.pending-vote-cta { font-size: 0.78rem; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+
 .position-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 10px 0;

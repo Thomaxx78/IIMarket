@@ -43,6 +43,7 @@ function dbToMarket(r) {
     resolution: r.resolution,
     createdAt: new Date(r.created_at).getTime(),
     resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
+    resolutionRequest: r.resolution_request || null,
   };
 }
 
@@ -99,7 +100,8 @@ async function dbUpdateMarket(id, fields) {
   if (fields.resolved !== undefined)   mapped.resolved    = fields.resolved;
   if (fields.resolution !== undefined) mapped.resolution  = fields.resolution;
   if (fields.resolvedAt !== undefined) mapped.resolved_at = new Date(fields.resolvedAt).toISOString();
-  if (fields.hiddenFrom !== undefined) mapped.hidden_from = fields.hiddenFrom;
+  if (fields.hiddenFrom !== undefined)        mapped.hidden_from        = fields.hiddenFrom;
+  if ('resolutionRequest' in fields)           mapped.resolution_request = fields.resolutionRequest;
   const { error } = await sb.from('markets').update(mapped).eq('id', id);
   if (error) throw error;
 }
