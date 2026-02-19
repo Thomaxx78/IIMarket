@@ -2,16 +2,78 @@
 // MARKET MODAL + TRADING + RESOLVE
 // ============================================================
 
+// ── Scroll lock ───────────────────────────────────────────────
+let _scrollY = 0;
+function lockScroll() {
+  _scrollY = window.scrollY;
+  document.body.style.overflow  = 'hidden';
+  document.body.style.position  = 'fixed';
+  document.body.style.top       = `-${_scrollY}px`;
+  document.body.style.width     = '100%';
+}
+function unlockScroll() {
+  document.body.style.overflow  = '';
+  document.body.style.position  = '';
+  document.body.style.top       = '';
+  document.body.style.width     = '';
+  window.scrollTo(0, _scrollY);
+}
+
+// ── Swipe to close ────────────────────────────────────────────
+function initModalSwipe() {
+  const modal = document.getElementById('modal-content');
+  let startY = 0, dragging = false;
+
+  modal.addEventListener('touchstart', e => {
+    startY   = e.touches[0].clientY;
+    dragging = false;
+    modal.style.transition = 'none';
+  }, { passive: true });
+
+  modal.addEventListener('touchmove', e => {
+    const delta = e.touches[0].clientY - startY;
+    if (delta > 0 && modal.scrollTop <= 0) {
+      dragging = true;
+      modal.style.transform = `translateY(${delta}px)`;
+      modal.style.opacity   = `${Math.max(0, 1 - delta / 350)}`;
+    }
+  }, { passive: true });
+
+  modal.addEventListener('touchend', e => {
+    modal.style.transition = 'transform 0.28s cubic-bezier(0.32,0.72,0,1), opacity 0.28s ease';
+    const delta = e.changedTouches[0].clientY - startY;
+    if (dragging && delta > 110) {
+      modal.style.transform = 'translateY(100%)';
+      modal.style.opacity   = '0';
+      setTimeout(() => {
+        closeModal();
+        modal.style.transform = '';
+        modal.style.opacity   = '';
+        modal.style.transition = '';
+      }, 280);
+    } else {
+      modal.style.transform = '';
+      modal.style.opacity   = '';
+      dragging = false;
+    }
+  }, { passive: true });
+}
+
+// Init swipe une seule fois au chargement
+document.addEventListener('DOMContentLoaded', initModalSwipe);
+
 function openMarket(id) {
   const m = state.markets.find(x => x.id === id);
   if (!m) return;
   tradeState = { side: 'yes' };
   renderModal(m);
   document.getElementById('market-modal').classList.add('open');
+  lockScroll();
 }
 
 function closeModal() {
   document.getElementById('market-modal').classList.remove('open');
+  unlockScroll();
 }
 
 function renderModal(m) {

@@ -192,56 +192,79 @@ header {
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: rgba(10,10,15,0.97);
-  backdrop-filter: blur(20px);
+  background: rgba(10,10,15,0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-top: 1px solid var(--border);
   display: flex;
+  align-items: center;
   z-index: 50;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: 0 8px env(safe-area-inset-bottom);
   height: calc(var(--bnav-h) + env(safe-area-inset-bottom));
 }
 
 .bnav-btn {
   flex: 1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px;
+  gap: 3px;
   background: none;
   border: none;
   color: var(--muted);
   font-family: 'Syne', sans-serif;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   cursor: pointer;
-  transition: color 0.2s;
-  padding: 8px 4px;
+  transition: color 0.18s;
+  padding: 10px 6px;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  border-radius: 14px;
+  position: relative;
 }
 
-.bnav-icon { font-size: 1.4rem; line-height: 1; transition: transform 0.2s; }
-.bnav-btn:active .bnav-icon { transform: scale(0.88); }
+.bnav-icon { font-size: 1.3rem; line-height: 1; transition: transform 0.18s; }
+.bnav-btn:active .bnav-icon { transform: scale(0.82); }
 .bnav-btn.active { color: var(--accent); }
-.bnav-btn.active .bnav-icon { filter: drop-shadow(0 0 6px var(--accent)); }
+.bnav-btn.active .bnav-icon { filter: drop-shadow(0 0 8px rgba(124,58,237,0.7)); }
 
-/* Bouton central + Créer */
+/* Indicateur actif — petite pastille */
+.bnav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  width: 4px; height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent);
+}
+
+/* Bouton central + Créer — cercle flottant */
 .bnav-create {
-  flex: 0 0 64px;
-  margin: 6px 8px;
+  flex: 0 0 68px;
+  margin-top: -22px;
+  padding: 0;
+  overflow: visible;
 }
 
 .bnav-create-inner {
-  width: 52px; height: 52px;
+  width: 58px; height: 58px;
   background: linear-gradient(135deg, var(--accent), #5b21b6);
-  border-radius: 16px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   line-height: 1;
-  transition: transform 0.2s, opacity 0.2s;
-  box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow:
+    0 4px 24px rgba(124,58,237,0.55),
+    0 0 0 4px rgba(10,10,15,1);
 }
 
-.bnav-create:active .bnav-create-inner { transform: scale(0.9); }
-.bnav-btn.bnav-create.active .bnav-create-inner { opacity: 0.8; }
+.bnav-create:active .bnav-create-inner {
+  transform: scale(0.88);
+  box-shadow: 0 2px 12px rgba(124,58,237,0.3), 0 0 0 4px rgba(10,10,15,1);
+}
+.bnav-btn.bnav-create.active .bnav-create-inner { opacity: 0.85; }
+.bnav-btn.bnav-create.active::after { display: none; }
 
 /* ── PAGES ── */
 .page {
