@@ -4,7 +4,6 @@
 
 async function createMarket() {
   const question    = getEditorText();
-  const category    = document.getElementById('new-category').value;
   const resolveDate = document.getElementById('new-date').value;
   const maxBet      = 150;
   const b           = 80;
@@ -15,7 +14,7 @@ async function createMarket() {
 
   const market = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    question, category, resolveDate, b, maxBet,
+    question, resolveDate, b, maxBet,
     creator: currentUser,
     hiddenFrom,
     qYes: 0, qNo: 0,
@@ -37,7 +36,7 @@ async function createMarket() {
     );
     const shortQ = question.length > 80 ? question.slice(0, 77) + '…' : question;
     sendPushNotification(
-      `⚡ Nouveau marché — ${market.category}`,
+      `⚡ Nouveau marché — FriendMarket`,
       shortQ,
       recipients
     );

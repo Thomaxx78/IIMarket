@@ -80,7 +80,6 @@ function renderMarketCard(m) {
   return `<div class="market-card ${m.resolved ? 'resolved' : ''}" onclick="openMarket('${m.id}')">
     <div class="market-tags">
       ${tagHtml}
-      <span class="tag" style="background:rgba(107,107,138,0.12);color:var(--muted)">${m.category}</span>
     </div>
     <div class="market-question">${renderQuestion(m.question)}${posIndicator}</div>
     <div class="prob-bar"><div class="prob-fill" style="width:${pct}%"></div></div>
