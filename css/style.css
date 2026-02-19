@@ -12,7 +12,7 @@
   --text: #e8e8f0;
   --muted: #6b6b8a;
   --gold: #f59e0b;
-  --bnav-h: 64px;
+  --bnav-h: 72px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -197,10 +197,13 @@ header {
   -webkit-backdrop-filter: blur(24px);
   border-top: 1px solid var(--border);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   z-index: 50;
-  padding: 0 8px env(safe-area-inset-bottom);
-  height: calc(var(--bnav-h) + env(safe-area-inset-bottom));
+  padding-top: 8px;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-bottom: max(env(safe-area-inset-bottom), 12px);
+  height: calc(var(--bnav-h) + max(env(safe-area-inset-bottom), 12px));
 }
 
 .bnav-btn {
@@ -215,10 +218,10 @@ header {
   font-weight: 700;
   cursor: pointer;
   transition: color 0.18s;
-  padding: 10px 6px;
+  padding: 6px 4px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  border-radius: 14px;
+  border-radius: 12px;
   position: relative;
 }
 
@@ -227,41 +230,40 @@ header {
 .bnav-btn.active { color: var(--accent); }
 .bnav-btn.active .bnav-icon { filter: drop-shadow(0 0 8px rgba(124,58,237,0.7)); }
 
-/* Indicateur actif — petite pastille */
+/* Indicateur actif */
 .bnav-btn.active::after {
   content: '';
   position: absolute;
-  bottom: 5px;
+  bottom: 3px;
   width: 4px; height: 4px;
   background: var(--accent);
   border-radius: 50%;
   box-shadow: 0 0 6px var(--accent);
 }
 
-/* Bouton central + Créer — cercle flottant */
+/* Bouton central + Créer */
 .bnav-create {
-  flex: 0 0 68px;
-  margin-top: -22px;
+  flex: 0 0 60px;
+  margin-top: -10px;
   padding: 0;
   overflow: visible;
 }
 
 .bnav-create-inner {
-  width: 58px; height: 58px;
+  width: 46px; height: 46px;
   background: linear-gradient(135deg, var(--accent), #5b21b6);
-  border-radius: 50%;
+  border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.7rem;
+  font-size: 1.4rem;
   line-height: 1;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow:
-    0 4px 24px rgba(124,58,237,0.55),
-    0 0 0 4px rgba(10,10,15,1);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.45);
+  margin: 0 auto;
 }
 
 .bnav-create:active .bnav-create-inner {
   transform: scale(0.88);
-  box-shadow: 0 2px 12px rgba(124,58,237,0.3), 0 0 0 4px rgba(10,10,15,1);
+  box-shadow: 0 2px 8px rgba(124,58,237,0.25);
 }
 .bnav-btn.bnav-create.active .bnav-create-inner { opacity: 0.85; }
 .bnav-btn.bnav-create.active::after { display: none; }
