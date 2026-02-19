@@ -312,12 +312,30 @@ async function resolveMarket(marketId, result) {
   updateHeader();
   showToast('Marché résolu ! Gains distribués. 🎉', 'success');
 
-  const participants = [...new Set(
-    state.transactions.filter(t => t.marketId === marketId).map(t => t.user)
-  )];
-  const shortQ   = m.question.length > 60 ? m.question.slice(0, 57) + '…' : m.question;
+  // Notif personnalisée par participant (win ou lose)
+  const shortQ   = m.question.length > 55 ? m.question.slice(0, 52) + '…' : m.question;
   const resultFr = result === 'yes' ? 'OUI ✅' : 'NON ❌';
-  sendPushNotification(`🏁 Marché résolu — ${resultFr}`, shortQ, participants);
+  const marketTx = state.transactions.filter(t => t.marketId === marketId);
+
+  Object.entries(byUser).forEach(([uname, pos]) => {
+    const winShares  = result === 'yes' ? pos.yes : pos.no;
+    const coinsSpent = marketTx.filter(t => t.user === uname).reduce((a, t) => a + t.coins, 0);
+    if (winShares > 0) {
+      const net = winShares - coinsSpent;
+      const sign = net >= 0 ? '+' : '';
+      sendPushNotification(
+        `🎉 Tu as gagné ! ${sign}${net.toFixed(1)} 🪙`,
+        `Marché résolu ${resultFr} — ${shortQ}`,
+        [uname]
+      );
+    } else {
+      sendPushNotification(
+        `😔 Tu as perdu ${coinsSpent.toFixed(0)} 🪙`,
+        `Marché résolu ${resultFr} — ${shortQ}`,
+        [uname]
+      );
+    }
+  });
 
   const fresh = state.markets.find(x => x.id === marketId);
   renderModal(fresh);
