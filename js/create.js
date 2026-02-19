@@ -6,8 +6,8 @@ async function createMarket() {
   const question    = getEditorText();
   const category    = document.getElementById('new-category').value;
   const resolveDate = document.getElementById('new-date').value;
-  const b           = 30;
   const maxBet      = parseFloat(document.getElementById('new-max-bet').value);
+  const b           = 100;
   const hiddenFrom  = getHiddenFrom();
 
   if (!question)    return showToast('Entre une question !', 'error');
